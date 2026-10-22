@@ -10,6 +10,8 @@ def validate(frame):
         raise ValueError("UTC-aware timestamps required")
     if not frame.index.is_unique or not frame.index.is_monotonic_increasing:
         raise ValueError("Duplicate/unsorted bars")
+    if (frame.index.minute != 0).any() or (frame.index.second != 0).any() or (frame.index.microsecond != 0).any() or (frame.index.nanosecond != 0).any():
+        raise ValueError("Expected clock-hour bar timestamps")
     if not set(("Open", "High", "Low", "Close", "Volume")) <= set(frame.columns):
         raise ValueError("Missing OHLCV")
     a = frame[["Open", "High", "Low", "Close", "Volume"]].to_numpy(float)

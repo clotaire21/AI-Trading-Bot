@@ -11,6 +11,8 @@ from .backtest import run, benchmark
 from .config import LIMITS
 from .data import align, fingerprint
 from .strategies import STRATEGIES, WARMUP
+from .provenance import VERIFIED_ORIGINS
+from .state import code_hash
 
 
 def score(result):
@@ -18,7 +20,7 @@ def score(result):
     return m["return_pct"] + m["max_drawdown_pct"]
 
 
-def compare(frames):
+def compare(frames, *, origin=None):
     align(frames)
     idx = frames["SPY"].index
     # Split on whole NY sessions, preventing a shared session across sets.
@@ -45,6 +47,8 @@ def compare(frames):
                          metrics=run(frames, pick, left, right)["metrics"]))
     m = test["metrics"]
     reasons = []
+    origin = origin or {"kind": "unverified_local"}
+    if origin.get("kind") not in VERIFIED_ORIGINS: reasons.append("unverified_data_provenance")
     if m["days"] < 60: reasons.append("holdout_below_60_sessions")
     if m["round_trips"] < 30: reasons.append("holdout_below_30_round_trips")
     if m["return_pct"] <= 0: reasons.append("holdout_not_profitable")
@@ -52,8 +56,10 @@ def compare(frames):
     if m["max_drawdown_pct"] < -LIMITS.drawdown * 100: reasons.append("drawdown_exceeds_limit")
     if stress["metrics"]["return_pct"] <= 0: reasons.append("fails_cost_stress")
     if test["halted"]: reasons.append("risk_circuit_breaker_triggered")
-    return {"schema": 1, "data_sha256": fingerprint(frames), "feed": "iex",
-        "adjustment": "all", "price_basis": "dividend_adjusted_research_proxy",
+    return {"schema": 2, "data_sha256": fingerprint(frames), "code_sha256": code_hash(),
+        "data_origin": origin, "feed": "iex" if origin.get("kind") in VERIFIED_ORIGINS else "unverified",
+        "adjustment": "all" if origin.get("kind") in VERIFIED_ORIGINS else "unverified",
+        "price_basis": "dividend_adjusted_research_proxy" if origin.get("kind") in VERIFIED_ORIGINS else "unknown_or_synthetic",
         "split": {"train_start": str(idx[WARMUP]), "validation_start": str(a),
                   "holdout_start": str(b), "end": str(end)},
         "assumptions": {"fee_bps_per_side": LIMITS.fee_bps, "slippage_bps_per_side": LIMITS.slippage_bps,
@@ -71,7 +77,8 @@ def write_report(report, directory):
     out = Path(directory)
     out.mkdir(parents=True, exist_ok=True)
     (out / "research.json").write_text(json.dumps(report, indent=2, allow_nan=False))
-    rows = ["# Quantitative research — 2,000 USD", "", "Historical results; no forecast.", "",
+    rows = ["# Quantitative research — 2,000 USD", "", "Results are specific to the supplied dataset; no forecast.",
+            "Data origin: " + report["data_origin"]["kind"], "",
             "| Sample | Strategy | Return % | Max drawdown % | Round trips |",
             "|---|---|---:|---:|---:|"]
     for sample in ("train", "validation"):
@@ -82,5 +89,6 @@ def write_report(report, directory):
         rows.append(f"| holdout | {name} | {m['return_pct']:.2f} | {m['max_drawdown_pct']:.2f} | {m['round_trips']} |")
     rows += ["", "Research gate: " + str(report["research_gate_passed"]),
              "Blockers: " + ", ".join(report["blockers"]), "", "Data hash: " + report["data_sha256"],
-             "", "IEX, dividend-adjusted proxy. Paper fills and dividends differ. No automatic promotion."]
+             "", "Feed: " + report["feed"],
+             "Declared price basis: " + report["price_basis"] + ". Paper fills and dividends differ. No automatic promotion."]
     (out / "research.md").write_text("\n".join(rows) + "\n")

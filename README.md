@@ -133,6 +133,8 @@ avec l'historique Alpaca. Ne jamais effacer l'état pour « débloquer » le bot
 ```bash
 python -m pip install -r requirements-research.txt
 python -m unittest discover -s tests -v
+# Vérification entièrement hors ligne, sans clés ni GitHub Actions :
+python -m bot selfcheck --state-dir results/offline
 python -m bot probe
 python -m bot research
 python -m bot validate
@@ -142,6 +144,19 @@ python -m bot paper
 # Rejouer exactement une entrée sauvegardée, sans réseau ni clés :
 python -m bot research --input runtime/research-input.json --state-dir results/replay
 ```
+
+`selfcheck` produit un tableau et un JSON pour 15 combinaisons (5 marchés
+synthétiques × 3 stratégies) et exécute toute la chaîne chronologique. Ses
+résultats ne peuvent pas servir de preuve d'activation. Ce travail reste possible
+quand les quotas GitHub Actions sont épuisés.
+
+Une recherche rejouée doit retrouver `research-manifest.json` près du fichier
+d'entrée (ou via `--manifest`). L'empreinte du contenu doit correspondre au
+téléchargement IEX enregistré. Sans manifeste, le calcul reste disponible mais
+le rapport est marqué non vérifié et sa promotion est bloquée. Une preuve de
+validation lie désormais le rapport complet, les données et la version du code.
+Cette traçabilité détecte les mélanges/altérations accidentels ; elle ne remplace
+pas une signature indépendante de la source de données.
 
 Secrets : `ALPACA_API_KEY` et `ALPACA_SECRET_KEY`, variables d'environnement en
 local ou secrets GitHub. Ne jamais les mettre dans le code, les journaux ou un chat.

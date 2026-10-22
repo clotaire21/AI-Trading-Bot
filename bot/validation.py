@@ -7,6 +7,7 @@ from .config import SYMBOLS
 from .risk import account_values
 from .runner import account_hash
 from .state import load, code_hash, atomic_json, now
+from .provenance import check_research_evidence
 
 
 def renew(client, directory):
@@ -18,6 +19,7 @@ def renew(client, directory):
     state = load(directory / "state.json")
     account, positions = client.account(), client.positions()
     account_values(account, positions)
+    check_research_evidence(research, proof)
     if (not proof.get("connection_passed") or not proof.get("safety_tests_passed") or
         proof.get("code_sha256") != code_hash() or
         proof.get("account_hash") != account_hash(account) or
