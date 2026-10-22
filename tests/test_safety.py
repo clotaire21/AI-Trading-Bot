@@ -61,12 +61,58 @@ class TransportSafety(unittest.TestCase):
 
     def test_pagination(self):
         client = ReadOnlyPaper()
-        client._request = Mock(side_effect=[{"bars": {"SPY": [{"x": 1}]}, "next_page_token": "a"},
-                                           {"bars": {"QQQ": [{"x": 2}]}, "next_page_token": None}])
-        bars = client.bars("start", "end")
+        client._request = Mock(side_effect=[{"bars": {"SPY": [{"t": "2026-01-05T15:00:00Z", "x": 1}]}, "next_page_token": "a"},
+                                           {"bars": {"QQQ": [{"t": "2026-01-05T15:00:00Z", "x": 2}]}, "next_page_token": None}])
+        bars = client.bars("2026-01-01T00:00:00Z", "2026-01-10T00:00:00Z")
         self.assertEqual(len(bars["SPY"]), 1)
         self.assertEqual(len(bars["QQQ"]), 1)
         self.assertEqual(client._request.call_args.args[3]["page_token"], "a")
+
+    def test_long_history_uses_complete_bounded_windows(self):
+        client = ReadOnlyPaper()
+        calls = []
+        def pages(method, base, path, params):
+            calls.append(params.copy())
+            if params["start"].startswith("2026-01-01"):
+                return {"bars": {"SPY": [{"t": "2026-01-15T15:00:00Z", "x": 1}]},
+                        "next_page_token": "another"} if "page_token" not in params else {
+                        "bars": {"QQQ": [{"t": "2026-01-16T15:00:00Z", "x": 2}]}}
+            return {"bars": {"IWM": [{"t": "2026-02-05T15:00:00Z", "x": 3}]}}
+        client._request = Mock(side_effect=pages)
+        bars = client.bars("2026-01-01T00:00:00Z", "2026-02-10T00:00:00Z")
+        self.assertEqual([len(bars[s]) for s in ("SPY", "QQQ", "IWM")], [1, 1, 1])
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(calls[0]["end"], calls[2]["start"])
+        self.assertEqual(calls[1]["page_token"], "another")
+        self.assertNotIn("page_token", calls[2])
+
+    def test_boundary_duplicates_are_not_double_counted(self):
+        client = ReadOnlyPaper()
+        row = {"t": "2026-01-31T00:00:00Z", "c": 1}
+        client._request = Mock(return_value={"bars": {"SPY": [row]}})
+        bars = client.bars("2026-01-01T00:00:00Z", "2026-02-10T00:00:00Z")
+        self.assertEqual(bars["SPY"], [row])
+        client._request = Mock(side_effect=[
+            {"bars": {"SPY": [row]}},
+            {"bars": {"SPY": [{**row, "c": 2}]}}])
+        with self.assertRaisesRegex(SafetyError, "Conflicting duplicate"):
+            client.bars("2026-01-01T00:00:00Z", "2026-02-10T00:00:00Z")
+
+    def test_repeated_page_token_fails_closed(self):
+        client = ReadOnlyPaper()
+        client._request = Mock(return_value={"bars": {}, "next_page_token": "same"})
+        with self.assertRaisesRegex(SafetyError, "repeated data pagination"):
+            client.bars("2026-01-01T00:00:00Z", "2026-01-10T00:00:00Z")
+        self.assertEqual(client._request.call_count, 2)
+
+    def test_pagination_cap_does_not_return_partial_history(self):
+        client = ReadOnlyPaper()
+        n = iter(range(200))
+        client._request = Mock(side_effect=lambda *args: {
+            "bars": {}, "next_page_token": str(next(n))})
+        with self.assertRaisesRegex(SafetyError, "limit reached within 30-day window"):
+            client.bars("2026-01-01T00:00:00Z", "2026-01-10T00:00:00Z")
+        self.assertEqual(client._request.call_count, 100)
 
 
 class RiskSafety(unittest.TestCase):
