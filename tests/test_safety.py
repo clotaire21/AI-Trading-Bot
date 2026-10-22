@@ -59,6 +59,23 @@ class TransportSafety(unittest.TestCase):
         self.assertFalse(body["extended_hours"])
         self.assertLessEqual(Decimal(body["qty"]) * Decimal(body["limit_price"]), 396)
 
+    def test_cli_safe_valueerror_diagnostics(self):
+        from unittest.mock import patch
+        from bot.__main__ import main
+        with tempfile.TemporaryDirectory() as directory:
+            for message, expected in (
+                ("Missing or misaligned cross-symbol bars", "Missing or misaligned cross-symbol bars"),
+                ("private credential data", "Unclassified data validation error"),
+            ):
+                with patch("sys.argv", ["bot", "research", "--state-dir", directory]), \
+                     patch("bot.__main__.ReadOnlyPaper") as client_factory, \
+                     patch("bot.__main__.append_event") as append, \
+                     patch("bot.__main__.datetime") as dt:
+                    dt.now.return_value = __import__("datetime").datetime(2026, 10, 22, tzinfo=__import__("datetime").timezone.utc)
+                    client_factory.return_value.bars.side_effect = ValueError(message)
+                    self.assertEqual(main(), 1)
+                    self.assertEqual(append.call_args.args[1]["reason"], expected)
+
     def test_pagination(self):
         client = ReadOnlyPaper()
         client._request = Mock(side_effect=[{"bars": {"SPY": [{"t": "2026-01-05T15:00:00Z", "x": 1}]}, "next_page_token": "a"},
