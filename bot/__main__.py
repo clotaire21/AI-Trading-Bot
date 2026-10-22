@@ -68,10 +68,25 @@ def main():
             client = ExecutionPaper() if execute else ReadOnlyPaper()
             cycle(client, directory, policy, execute=execute)
     except (SafetyError, ValueError, KeyError, OSError, subprocess.CalledProcessError) as exc:
-        # Record a sanitized failure. Exception messages from HTTP never contain credentials.
+        # Only permit vetted constant validation errors to appear in logs.
+        # Arbitrary exception strings may embed untrusted input or credentials.
         error = {"event": "failure", "command": args.command, "type": type(exc).__name__}
         if isinstance(exc, SafetyError):
             error["reason"] = str(exc)
+        elif isinstance(exc, ValueError):
+            known = (
+                "UTC-aware timestamps required", "Duplicate/unsorted bars",
+                "Expected clock-hour bar timestamps", "Missing OHLCV",
+                "Nonfinite/nonpositive OHLCV", "Inconsistent OHLC",
+                "Fixed universe required", "Missing or misaligned cross-symbol bars",
+                "At least 250 aligned sessions required",
+            )
+            if str(exc) in known:
+                error["reason"] = str(exc)
+            elif str(exc).startswith("Missing symbol bars: ") and str(exc).split(": ", 1)[-1] in ("SPY", "QQQ", "IWM"):
+                error["reason"] = str(exc)
+            else:
+                error["reason"] = "Unclassified data validation error"
         append_event(directory, error)
         print(json.dumps(error), file=sys.stderr)
         return 1
