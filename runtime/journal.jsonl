@@ -1,0 +1,1 @@
+{"at": "2026-10-22T15:42:44.723692+00:00", "command": "research", "event": "failure", "hash": "9446fbd31bf0e984b0bd280c17052552d1e7e33e95ef853d61b0e84c0d4bbb18", "previous": "0000000000000000000000000000000000000000000000000000000000000000", "reason": "Data pagination limit reached", "type": "SafetyError"}
