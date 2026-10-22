@@ -6,6 +6,7 @@ from bot.alpaca import ReadOnlyPaper, SafetyError
 from bot.runner import account_hash
 from bot.state import code_hash, atomic_json, load
 from bot.validation import renew
+from bot.provenance import payload_hash
 from helpers import account
 
 
@@ -18,10 +19,13 @@ class RenewalTests(unittest.TestCase):
         client.asset.return_value = dict(tradable=True, fractionable=True, status="active")
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
+            research = dict(schema=2, code_sha256=code_hash(), data_origin={"kind": "alpaca_iex_download"},
+                            data_sha256="data", research_gate_passed=True)
             proof = dict(at="2026-10-22T12:00:00+00:00", code_sha256=code_hash(), connection_passed=True,
-                         safety_tests_passed=True, account_hash=account_hash(account()), research_data_sha256="data")
+                         safety_tests_passed=True, account_hash=account_hash(account()), research_data_sha256="data",
+                         research_sha256=payload_hash(research))
             atomic_json(path / "validation.json", proof)
-            atomic_json(path / "research.json", dict(data_sha256="data", research_gate_passed=True))
+            atomic_json(path / "research.json", research)
             atomic_json(path / "state.json", dict(account_hash=account_hash(account())))
             original = (path / "research.json").read_bytes()
             renewed = renew(client, path)

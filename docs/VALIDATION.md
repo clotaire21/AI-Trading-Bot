@@ -4,7 +4,7 @@
 
 Commande : `python -m unittest discover -s tests -v` (Python 3.12).
 
-Résultat local au 22 octobre 2026 : **34 tests réussis**, sans accès aux clés
+Résultat local au 22 octobre 2026 : **43 tests réussis**, sans accès aux clés
 réelles. Vérification de syntaxe YAML, scripts shell et compilation Python réussie.
 
 Les tests couvrent les endpoints, secrets absents, redirections, données payantes,
@@ -18,6 +18,21 @@ gaps, frais, maintien de la V1 et reproductibilité des empreintes.
 Un essai de bout en bout du moteur compare 300 séances synthétiques, puis rejoue
 leur export OHLCV via le CLI. Il sert à vérifier la chaîne complète ; ces données
 ne sont pas des cours de marché. Aucun rapport synthétique n'autorise le trading.
+
+Commande dédiée : `python -m bot selfcheck --state-dir results/offline`.
+Elle exécute 15 combinaisons (marchés plat, haussier, baissier, volatil et krach ;
+trois stratégies), plus la chaîne 60/20/20 sur 300 séances synthétiques. Un test
+interdit explicitement la création de sockets et de client Alpaca pendant cette
+commande. Les plafonds d'entrée et l'arrêt des achats après suspension sont
+contrôlés. Le krach vérifie aussi qu'un gap peut dépasser le seuil de drawdown.
+
+La provenance des données est vérifiée séparément : un fichier local sans
+manifeste reste analysable, mais ne peut pas autoriser les ordres. Une modification
+de son contenu invalide le manifeste. La preuve de sécurité contient l'empreinte
+du rapport complet ; un rapport modifié ou produit avec un autre code est refusé.
+Les nouveaux tests couvrent également un versement inexpliqué, un remplissage à
+prix nul/négatif ou hors limite, et la persistance d'une suspension malgré une
+panne de données.
 
 ## Ce qui n'est pas encore prouvé
 

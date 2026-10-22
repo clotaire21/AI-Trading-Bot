@@ -10,6 +10,7 @@ import pandas as pd
 from bot.alpaca import ExecutionPaper, SafetyError
 from bot.runner import cycle, account_hash, execution_gate
 from bot.state import atomic_json, code_hash, load
+from bot.provenance import payload_hash
 from helpers import frames, raw_bars, account
 
 
@@ -42,12 +43,14 @@ class RunnerTests(unittest.TestCase):
         self.write_proof()
 
     def write_proof(self, **updates):
+        research = dict(schema=2, code_sha256=code_hash(), data_origin={"kind": "alpaca_iex_download"},
+                        research_gate_passed=True, selected_on_validation="trend_6_24", data_sha256="data")
         proof = dict(at=self.wall.isoformat(), code_sha256=code_hash(), safety_tests_passed=True,
-                     connection_passed=True, account_hash=account_hash(self.a), research_data_sha256="data")
+                     connection_passed=True, account_hash=account_hash(self.a), research_data_sha256="data",
+                     research_sha256=payload_hash(research))
         proof.update(updates)
         atomic_json(self.directory / "validation.json", proof)
-        atomic_json(self.directory / "research.json", dict(research_gate_passed=True,
-                    selected_on_validation="trend_6_24", data_sha256="data"))
+        atomic_json(self.directory / "research.json", research)
 
     def test_only_one_order_and_no_duplicate_when_pending(self):
         cycle(self.client, self.directory, self.policy, True)
@@ -115,6 +118,43 @@ class RunnerTests(unittest.TestCase):
         cycle(self.client, self.directory, self.policy, False)
         self.assertFalse(self.client.submit.called)
         self.assertEqual(load(self.directory / "state.json")["orders_today"], 0)
+
+    def test_unexplained_cash_deposit_suspends(self):
+        cycle(self.client, self.directory, self.policy, False)
+        self.a.update(cash="2050", equity="2050")
+        with self.assertRaisesRegex(SafetyError, "Unexplained cash"):
+            cycle(self.client, self.directory, self.policy, True)
+        self.client.submit.assert_not_called()
+
+    def test_invalid_or_out_of_limit_fill_does_not_clear_pending_intent(self):
+        cycle(self.client, self.directory, self.policy, True)
+        pending = load(self.directory / "state.json")["pending"]
+        for average in (0, -1, 101):
+            self.a.update(cash=str(2000 - average), equity=str(2100 - average))
+            self.client.positions.return_value = [dict(symbol="SPY", side="long", qty="1",
+                market_value="100", avg_entry_price="100", current_price="100")]
+            order = dict(client_order_id=pending["client_id"], symbol="SPY", side="buy",
+                         status="filled", filled_qty="1", filled_avg_price=str(average))
+            self.client.orders.side_effect = lambda status="open": [order] if status == "all" else []
+            with self.assertRaisesRegex(SafetyError, "Fill violates"):
+                cycle(self.client, self.directory, self.policy, True)
+            self.assertEqual(load(self.directory / "state.json")["pending"], pending)
+        self.assertEqual(self.client.submit.call_count, 1)
+
+    def test_drawdown_latch_persists_when_data_fetch_fails(self):
+        cycle(self.client, self.directory, self.policy, False)
+        state = load(self.directory / "state.json")
+        state.update(tracked_cash=1700, tracked_quantities={"SPY": "3"}, peak=2100,
+                     entries={"SPY": state["last_bar"]})
+        atomic_json(self.directory / "state.json", state)
+        self.a.update(cash="1700", equity="1900")
+        self.client.positions.return_value = [dict(symbol="SPY", side="long", qty="3",
+            market_value="200", avg_entry_price="100", current_price=str(200 / 3))]
+        self.client.bars.side_effect = SafetyError("data unavailable")
+        with self.assertRaisesRegex(SafetyError, "data unavailable"):
+            cycle(self.client, self.directory, self.policy, True)
+        self.assertTrue(load(self.directory / "state.json")["halted"])
+        self.client.submit.assert_not_called()
 
 
 if __name__ == "__main__": unittest.main()

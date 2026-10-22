@@ -16,6 +16,7 @@ from .data import frames_from_bars, align
 from .risk import account_values, make_order, number
 from .state import atomic_json, append_event, code_hash, load, now
 from .strategies import signals, STRATEGIES
+from .provenance import check_research_evidence
 
 
 def account_hash(account):
@@ -58,9 +59,8 @@ def execution_gate(directory, policy, account):
     age = datetime.now(timezone.utc) - datetime.fromisoformat(proof["at"])
     if not timedelta(0) <= age <= timedelta(days=7):
         raise SafetyError("Expired safety validation")
-    if (not research.get("research_gate_passed") or
-            research.get("selected_on_validation") != policy["strategy"] or
-            proof.get("research_data_sha256") != research.get("data_sha256")):
+    check_research_evidence(research, proof)
+    if research.get("selected_on_validation") != policy["strategy"]:
         raise SafetyError("Research gate failed")
 
 
@@ -110,7 +110,11 @@ def cycle(client, directory, policy, execute=False):
         if expected != actual:
             raise SafetyError("Fills do not explain observed quantities")
         if filled > 0:
-            notional = filled * number(order["filled_avg_price"])
+            average = number(order["filled_avg_price"])
+            limit = number(pending["limit_price"])
+            if average <= 0 or (pending["side"] == "buy" and average > limit + .000001) or (pending["side"] == "sell" and average < limit - .000001):
+                raise SafetyError("Fill violates positive price/order limit")
+            notional = filled * average
             state["modeled_cost"] += notional * .001
             state["tracked_cash"] += notional * (-1 if pending["side"] == "buy" else 1)
             if pending["side"] == "buy":

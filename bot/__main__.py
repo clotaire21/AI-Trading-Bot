@@ -10,31 +10,42 @@ from .data import frames_from_bars
 from .research import compare, write_report
 from .runner import probe, cycle
 from .state import atomic_json, append_event, code_hash, load, now
+from .provenance import payload_hash, replay_origin
 
 
 def main():
     parser = argparse.ArgumentParser(description="Paper-only research lab; orders disabled by default")
-    parser.add_argument("command", choices=("probe", "research", "validate", "renew", "shadow", "paper"))
+    parser.add_argument("command", choices=("probe", "research", "validate", "renew", "selfcheck", "shadow", "paper"))
     parser.add_argument("--state-dir", default="runtime")
     parser.add_argument("--input", help="Replay a saved Alpaca bar JSON for offline research")
+    parser.add_argument("--manifest", help="Optional manifest paired with --input")
     args = parser.parse_args()
     directory = Path(args.state_dir)
     try:
-        if args.command == "probe":
+        if args.command == "selfcheck":
+            from .offline import selfcheck
+            report = selfcheck(directory / "selfcheck")
+            print(json.dumps(report, indent=2))
+        elif args.command == "probe":
             report = probe(ReadOnlyPaper(), directory)
             print(json.dumps(report, indent=2))
         elif args.command == "research":
             if args.input:
                 raw = load(args.input)
+                origin = replay_origin(raw, args.input, args.manifest)
             else:
                 client = ReadOnlyPaper()
                 end = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
                 raw = client.bars("2023-01-01T00:00:00Z", end.isoformat(), "all")
                 atomic_json(directory / "research-input.json", raw)
-                atomic_json(directory / "research-manifest.json", {
+                manifest = {
                     "downloaded_at": now(), "end": end.isoformat(), "start": "2023-01-01T00:00:00Z",
-                    "feed": "iex", "adjustment": "all", "timeframe": "1Hour"})
-            write_report(compare(frames_from_bars(raw)), directory)
+                    "source": "alpaca_iex_download", "payload_sha256": payload_hash(raw),
+                    "feed": "iex", "adjustment": "all", "timeframe": "1Hour"}
+                atomic_json(directory / "research-manifest.json", manifest)
+                origin = {"kind": "alpaca_iex_download", "payload_sha256": manifest["payload_sha256"],
+                          "downloaded_at": manifest["downloaded_at"]}
+            write_report(compare(frames_from_bars(raw), origin=origin), directory)
             print((directory / "research.md").read_text())
         elif args.command == "validate":
             subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], check=True)
@@ -44,6 +55,7 @@ def main():
                 "account_hash": report["account_hash"],
                 "connection_passed": report["dedicated_2000_account_ready"],
                 "research_data_sha256": research["data_sha256"],
+                "research_sha256": payload_hash(research),
                 "research_gate_passed": research["research_gate_passed"]}
             atomic_json(directory / "validation.json", proof)
             print(json.dumps(proof, indent=2))
