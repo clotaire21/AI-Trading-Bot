@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import pandas as pd
-import yfinance as yf
 
 START_CAPITAL = 2000.0
 SYMBOL = "SPY"
@@ -17,7 +16,7 @@ def backtest(data: pd.DataFrame) -> dict:
     # Les signaux calculés après la clôture de J ne peuvent s'exécuter qu'à l'ouverture J+1.
     fast = frame["Close"].rolling(10).mean()
     slow = frame["Close"].rolling(30).mean()
-    target = (fast > slow).shift(1).fillna(False).astype(bool)
+    target = (fast > slow).shift(1, fill_value=False).astype(bool)
 
     cash = START_CAPITAL
     units = 0.0
@@ -51,6 +50,7 @@ def backtest(data: pd.DataFrame) -> dict:
     }
 
 def main() -> None:
+    import yfinance as yf
     raw = yf.download(SYMBOL, start=START, auto_adjust=True, progress=False)
     if isinstance(raw.columns, pd.MultiIndex):
         raw.columns = raw.columns.get_level_values(0)

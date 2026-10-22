@@ -5,6 +5,7 @@ permissions:
   contents: read
 jobs:
   backtest:
+    if: vars.FREE_ACTIONS_CONFIRMED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

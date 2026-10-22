@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Generated research and execution state are kept off the source branch.
+results/
+runtime/
+runtime-state/
