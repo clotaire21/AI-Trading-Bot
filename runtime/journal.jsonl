@@ -1,1 +1,2 @@
 {"at": "2026-10-22T15:42:44.723692+00:00", "command": "research", "event": "failure", "hash": "9446fbd31bf0e984b0bd280c17052552d1e7e33e95ef853d61b0e84c0d4bbb18", "previous": "0000000000000000000000000000000000000000000000000000000000000000", "reason": "Data pagination limit reached", "type": "SafetyError"}
+{"at": "2026-10-22T15:58:15.622686+00:00", "command": "research", "event": "failure", "hash": "f3494258f42bbd20b5dee97c23dfe9bcede77b893c2ce9d16ab2e9f644fd7f9a", "previous": "9446fbd31bf0e984b0bd280c17052552d1e7e33e95ef853d61b0e84c0d4bbb18", "type": "ValueError"}
