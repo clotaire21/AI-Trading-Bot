@@ -5,6 +5,7 @@ validated order object; the production broker domain is absent from the code.
 """
 from __future__ import annotations
 import json
+from datetime import datetime, timedelta, timezone
 import os
 import re
 from urllib.error import HTTPError, URLError
@@ -78,24 +79,59 @@ class ReadOnlyPaper:
     def bars(self, start, end, adjustment="raw"):
         if adjustment not in ("raw", "all"):
             raise SafetyError("Unknown adjustment")
+        try:
+            first = datetime.fromisoformat(start.replace("Z", "+00:00"))
+            last = datetime.fromisoformat(end.replace("Z", "+00:00"))
+            if first.utcoffset() is None or last.utcoffset() is None or first >= last:
+                raise ValueError("Invalid time range")
+        except (TypeError, AttributeError, ValueError):
+            raise SafetyError("Invalid UTC-aware data time range") from None
+        first, last = first.astimezone(timezone.utc), last.astimezone(timezone.utc)
         result = {s: [] for s in SYMBOLS}
-        token, seen = None, set()
-        for _ in range(100):
-            params = dict(symbols=",".join(SYMBOLS), timeframe="1Hour", start=start,
-                          end=end, feed="iex", adjustment=adjustment, limit=10000,
-                          sort="asc")
-            if token:
-                params["page_token"] = token
-            page = self._request("GET", DATA_URL, "/v2/stocks/bars", params)
-            for symbol in SYMBOLS:
-                result[symbol].extend(page.get("bars", {}).get(symbol, []))
-            token = page.get("next_page_token")
-            if not token:
-                return result
-            if token in seen:
-                raise SafetyError("Repeated data pagination token")
-            seen.add(token)
-        raise SafetyError("Data pagination limit reached")
+        # Bound each request window, rather than permitting unlimited pagination
+        # across several years of multi-symbol history. Each window must finish
+        # pagination completely; no incomplete research dataset is returned.
+        cursor = first
+        while cursor < last:
+            stop = min(cursor + timedelta(days=30), last)
+            token, seen = None, set()
+            for _ in range(100):
+                params = dict(symbols=",".join(SYMBOLS), timeframe="1Hour",
+                              start=cursor.isoformat(), end=stop.isoformat(),
+                              feed="iex", adjustment=adjustment, limit=10000, sort="asc")
+                if token:
+                    params["page_token"] = token
+                page = self._request("GET", DATA_URL, "/v2/stocks/bars", params)
+                if not isinstance(page, dict) or not isinstance(page.get("bars", {}), dict):
+                    raise SafetyError("Invalid market data pagination response")
+                for symbol in SYMBOLS:
+                    rows = page.get("bars", {}).get(symbol, [])
+                    if not isinstance(rows, list):
+                        raise SafetyError("Invalid market data bars")
+                    result[symbol].extend(rows)
+                token = page.get("next_page_token")
+                if not token:
+                    break
+                if not isinstance(token, str) or token in seen:
+                    raise SafetyError("Invalid or repeated data pagination token")
+                seen.add(token)
+            else:
+                raise SafetyError("Data pagination limit reached within 30-day window")
+            cursor = stop
+        # Adjacent windows can share a boundary bar depending on provider
+        # inclusivity. Deduplicate identical timestamps only when identical data;
+        # never silently discard conflicting values.
+        for symbol in SYMBOLS:
+            unique = {}
+            for row in result[symbol]:
+                if not isinstance(row, dict) or not isinstance(row.get("t"), str):
+                    raise SafetyError("Invalid market data bar")
+                timestamp = row["t"]
+                if timestamp in unique and unique[timestamp] != row:
+                    raise SafetyError("Conflicting duplicate market data bar")
+                unique[timestamp] = row
+            result[symbol] = list(unique.values())
+        return result
 
 
 class ExecutionPaper(ReadOnlyPaper):
