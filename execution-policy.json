@@ -1,5 +1,5 @@
 {
   "orders_enabled": false,
-  "strategy": null,
-  "reason": "Await verified zero-paid-usage protection, read-only paper connection, real-data research and safety validation."
+  "strategy": "breakout_12",
+  "reason": "Shadow-only forward observation. Selected on validation, but the 2026-01-21 to 2026-10-22 holdout lost 2.85%, trailed 60% SPY, and failed the stressed-cost gate. Orders remain disabled."
 }
