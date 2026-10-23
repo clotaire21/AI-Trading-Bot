@@ -4,14 +4,15 @@
 
 Commande : `python -m unittest discover -s tests -v` (Python 3.12).
 
-Résultat local au 22 octobre 2026 : **43 tests réussis**, sans accès aux clés
+Résultat local au 23 octobre 2026 : **55 tests réussis**, sans accès aux clés
 réelles. Vérification de syntaxe YAML, scripts shell et compilation Python réussie.
 
 Les tests couvrent les endpoints, secrets absents, redirections, données payantes,
 payload limite DAY paper, pagination, tailles, espèces, ventes à découvert,
 preuves périmées ou liées à un autre code/compte, kill switch, compte 100 000 USD,
 barres périmées, décalage d'horloge, doublons, réponse POST ambiguë, exécution
-partielle, reprise shadow, intégrité du journal, écriture/relecture de la branche
+partielle, reprise shadow, portefeuilles virtuels prospectifs, refus d'un client
+capable d'écrire en mode shadow, intégrité du journal, écriture/relecture de la branche
 d'état sans modification de main, données corrompues, absence d'anticipation,
 gaps, frais, maintien de la V1 et reproductibilité des empreintes.
 
@@ -40,7 +41,9 @@ panne de données.
   ne sont ni lisibles ni disponibles dans l'environnement local.
 - La facturation GitHub n'est pas accessible au connecteur. Le verrou de variable
   n'empêche pas techniquement une facture si l'attestation est fausse.
-- Aucune stratégie n'est déclarée supérieure au S&P 500 sans le rapport IEX réel.
+- Le rapport IEX réel existe, mais aucune stratégie historique n'a passé tous les
+  critères : la candidate retenue a perdu 2,85 % sur le test final et échoue au
+  stress de coûts ainsi qu'à la comparaison 60 % SPY + cash.
 - IEX ne représente pas toutes les places américaines. Les barres manquantes
   communes aux trois symboles ne sont pas détectées comme des trous par un
   calendrier externe ; elles restent des gaps entre observations.
@@ -56,9 +59,10 @@ panne de données.
 - À raison d'un ordre par cycle, plusieurs sorties nécessaires peuvent prendre
   plusieurs heures. Les seuils et la durée maximale sont observés périodiquement,
   non garantis ; un ordre limite peut ne pas se remplir.
-- Le mode shadow journalise les décisions et observe le compte ; il ne simule
-  pas un second portefeuille avec remplissages hypothétiques. Le backtest et le
-  paper effectif fournissent les deux courbes de performance utiles.
+- Le mode shadow maintient cinq portefeuilles virtuels prospectifs indépendants,
+  avec remplissages modélisés à l'ouverture suivante et coûts hypothétiques. Il
+  permet une comparaison homogène, mais ne reproduit pas les files d'attente ni
+  les remplissages réels d'ordres limites Alpaca Paper.
 - Le journal est chaîné pour détecter une altération accidentelle ; ce n'est pas
   une signature cryptographique contre un acteur pouvant réécrire tout le dépôt.
 - Les preuves expirent après sept jours. Le workflow paper renouvelle automatiquement
@@ -68,8 +72,7 @@ panne de données.
 
 ## Prochaine étape indispensable
 
-Vérifier le blocage des dépenses Actions à 0 USD, attester
-`FREE_ACTIONS_CONFIRMED=true`, puis lancer **preflight** sur main.
-Il renverra uniquement des informations de connexion anonymisées et la
-compatibilité du compte dédié. Poursuivre ensuite avec **validate**, puis lire les
-preuves avant toute modification d'activation des ordres.
+Fusionner le suivi parallèle, laisser `shadow` accumuler de nouvelles observations
+sur `main`, puis comparer les candidats après une durée et un nombre de transactions
+suffisants. Les ordres Alpaca Paper restent interdits tant qu'aucune stratégie ne
+passe les critères prospectifs et le stress de coûts.

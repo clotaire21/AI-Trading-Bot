@@ -9,6 +9,7 @@ from .alpaca import ReadOnlyPaper, ExecutionPaper, SafetyError
 from .data import frames_from_bars, align_research
 from .research import compare, write_report
 from .runner import probe, cycle
+from .shadow import shadow_cycle
 from .state import atomic_json, append_event, code_hash, load, now
 from .provenance import payload_hash, replay_origin
 
@@ -62,6 +63,9 @@ def main():
         elif args.command == "renew":
             from .validation import renew
             print(json.dumps(renew(ReadOnlyPaper(), directory), indent=2))
+        elif args.command == "shadow":
+            report = shadow_cycle(ReadOnlyPaper(), directory)
+            print(json.dumps(report, indent=2))
         else:
             execute = args.command == "paper"
             policy = load("execution-policy.json")
