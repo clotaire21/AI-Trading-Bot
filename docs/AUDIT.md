@@ -56,3 +56,17 @@ cas, garder du cash et rester suspendu est le résultat attendu.
 
 Les actions checkout/setup-python sont fixées aux commits des tags v6 récupérés
 via GitHub le 22 octobre 2026. Pas de runner renforcé, cache ou abonnement ajouté.
+
+## Mise à jour du 23 octobre 2026
+
+Le dépôt est désormais public, le compte Alpaca Paper dédié de 2 000 USD a été
+confirmé en lecture seule et les données IEX réelles ont été téléchargées. Le test
+final du 21 janvier au 22 octobre 2026 a invalidé `breakout_12` : −2,85 %, contre
++7,55 % pour 60 % SPY + cash, et −7,91 % sous slippage renforcé. Les ordres restent
+donc désactivés.
+
+Le mode shadow est étendu à cinq portefeuilles virtuels prospectifs indépendants.
+Les trois stratégies historiques et deux hypothèses pré-déclarées commencent avec
+2 000 USD chacune, comptabilisent les coûts et sont comparées à 60 % SPY + cash.
+Cette observation future ne réécrit pas le test final déjà consulté et ne peut pas
+promouvoir automatiquement une stratégie.

@@ -3,10 +3,11 @@
 **Capital fictif : 2 000 USD. Ordres désactivés par défaut. Aucun trading réel.**
 
 La V1 est conservée dans `simulate.py`. Le nouveau laboratoire ajoute une
-connexion Alpaca en lecture seule, trois stratégies horaires, des backtests
+connexion Alpaca en lecture seule, trois stratégies historiques, des backtests
 chronologiques, des contrôles de risque et un exécuteur d'ordres **paper** verrouillé.
-Les performances et la connexion réelle ne sont pas encore validées : aucun
-résultat sur données synthétiques ne constitue une preuve de rentabilité.
+La connexion réelle en lecture seule est validée, mais aucune stratégie n'a encore
+passé les critères de promotion. Aucun résultat synthétique ne constitue une
+preuve de rentabilité.
 
 ## Risque et stratégies
 
@@ -26,6 +27,14 @@ Stratégies fixes : moyenne mobile 6/24 heures, cassure des 12 dernières barres
 retour à la moyenne avec z-score 20 barres. Aucun modèle payant ni appel à un LLM.
 L'ajout de ML nécessitera un gain hors échantillon après coûts ; il n'est pas
 nécessaire pour faire fonctionner ce laboratoire.
+
+Le mode `shadow` suit en parallèle cinq portefeuilles virtuels distincts de
+2 000 USD : les trois stratégies historiques et deux hypothèses pré-déclarées,
+un retour à la moyenne plus sélectif et une tendance 24/72 heures. Les deux
+nouvelles hypothèses ne sont pas ajoutées rétroactivement au test final déjà lu :
+elles commencent à zéro lors de leur première observation future. Les signaux,
+positions virtuelles, frais modélisés et performances sont conservés sans aucun
+ordre envoyé à Alpaca.
 
 Les plafonds s'appliquent aux ordres et aux observations périodiques. Les
 variations de prix, gaps, limites non exécutées et interruptions peuvent dépasser
@@ -101,6 +110,10 @@ L'exécuteur ne possède pas d'API d'annulation ni de liquidation forcée.
 - Référence SPY à 100 % et à 60 % + cash, mêmes dates et coûts. SPY est un ETF
   proxy du S&P 500, pas l'indice exact. Recherche sur données ajustées des dividendes ;
   paper sur prix bruts, Alpaca Paper ne simulant pas les dividendes.
+- Le suivi shadow conserve, pour chaque candidat, la trésorerie et les positions
+  virtuelles, la performance nette des coûts modélisés, le drawdown et une
+  référence 60 % SPY + 40 % cash. Le résumé de chaque workflow affiche le tableau
+  comparatif. Ce suivi prospectif ne peut pas autoriser automatiquement les ordres.
 - Le suivi paper conserve valeur brute, valeur nette de coûts modélisés, rendement,
   drawdown et référence SPY en prix. Le benchmark utilise la dernière barre complète,
   le compte la valorisation du courtier ; les deux horodatages sont conservés.
@@ -120,6 +133,8 @@ La branche `bot-state`, créée au premier lancement autorisé, contient `runtim
 - `connection.json`, `validation.json`, `research.json`, `research.md` ;
 - `research-input.json`, manifeste des données, pour rejouer la recherche ;
 - `state.json`, `performance.json`, journal `journal.jsonl` avec chaîne de hachage.
+- `shadow-state.json` et `shadow-performance.json` pour les cinq portefeuilles
+  virtuels prospectifs, sans mélange avec l'état d'exécution paper.
 
 Les workflows sont sérialisés, sans force-push ni cache/artifact supplémentaire.
 Une intention est écrite et synchronisée localement avant la requête d'ordre,
