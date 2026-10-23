@@ -8,8 +8,9 @@ on:
         options: [preflight, research, validate, shadow, paper]
         default: preflight
   schedule:
-    # Approximate hourly cadence, not a latency guarantee. DST handled by broker clock.
-    - cron: '7 15-20 * * 1-5'
+    # Seven UTC slots cover the six complete 10:00..15:00 New York bars in
+    # both EDT and EST. The extra edge slot exits safely (pre-bar or closed).
+    - cron: '7 15-21 * * 1-5'
 permissions:
   contents: write
 concurrency:

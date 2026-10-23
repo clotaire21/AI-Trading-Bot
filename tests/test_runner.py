@@ -96,6 +96,18 @@ class RunnerTests(unittest.TestCase):
         with self.assertRaises(SafetyError): cycle(self.client, self.directory, self.policy, True)
         self.assertFalse(self.client.submit.called)
 
+    def test_est_opening_slot_waits_for_first_complete_bar(self):
+        # 15:07 UTC is 10:07 New York in EST. The 10:00 hourly bar is still
+        # incomplete, so the DST-covering schedule must no-op successfully.
+        self.wall = datetime(2023, 1, 12, 15, 7, tzinfo=timezone.utc)
+        self.mock_time.now.return_value = self.wall
+        self.client.bars.return_value = raw_bars(frames(5, True))
+        cycle(self.client, self.directory, self.policy, False)
+        self.client.submit.assert_not_called()
+        self.assertIsNone(load(self.directory / "state.json")["last_bar"])
+        self.assertIn("waiting_for_first_complete_bar",
+                      (self.directory / "journal.jsonl").read_text())
+
     def test_100k_default_account_not_used(self):
         self.a.update(cash="100000", equity="100000")
         with self.assertRaises(SafetyError): cycle(self.client, self.directory, self.policy, True)

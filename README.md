@@ -105,8 +105,9 @@ L'exécuteur ne possède pas d'API d'annulation ni de liquidation forcée.
   drawdown et référence SPY en prix. Le benchmark utilise la dernière barre complète,
   le compte la valorisation du courtier ; les deux horodatages sont conservés.
 
-Le planning vise 15:07 à 20:07 UTC en semaine, soit les contrôles après les barres
-utiles selon l'heure d'été américaine. Le calendrier Alpaca filtre les fermetures.
+Le planning couvre 15:07 à 21:07 UTC en semaine afin d'observer les six barres
+utiles aussi bien en EDT qu'en EST. Le créneau de bord supplémentaire attend la
+première barre complète ou constate la fermeture sans prendre de décision. Le calendrier Alpaca filtre les fermetures.
 GitHub Actions n'offre aucune garantie de ponctualité. Les ordres paper sont des
 limites DAY, pouvant rester non exécutées ; les backtests à l'open sont un modèle
 de recherche, pas une reproduction de ces limites ni du retard de quelques minutes.
