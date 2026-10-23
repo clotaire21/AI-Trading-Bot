@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from bot.backtest import run, benchmark
 from bot.config import LIMITS, SYMBOLS
-from bot.data import validate, align, fingerprint, frames_from_bars
+from bot.data import validate, align, align_research, fingerprint, frames_from_bars
 from bot.research import compare
 from bot.strategies import signals, STRATEGIES
 from helpers import frames, raw_bars
@@ -66,6 +66,33 @@ class ResearchTests(unittest.TestCase):
         data = frames(10)
         data["IWM"] = data["IWM"].iloc[:-1]
         with self.assertRaises(ValueError): align(data)
+
+    def test_research_aligns_only_observed_small_missing_sample(self):
+        original = frames(30)
+        trimmed = {s: f.copy() for s, f in original.items()}
+        missing = trimmed["IWM"].index[25]
+        trimmed["IWM"] = trimmed["IWM"].drop(missing)
+        with self.assertRaisesRegex(ValueError, "Missing or misaligned"):
+            align(trimmed)
+        fixed = align_research(trimmed)
+        self.assertEqual(len(fixed["SPY"]), len(original["SPY"]) - 1)
+        self.assertNotIn(missing, fixed["SPY"].index)
+        for symbol in SYMBOLS:
+            pd.testing.assert_frame_equal(fixed[symbol], original[symbol].drop(missing))
+        self.assertEqual(fingerprint(fixed), fingerprint(align_research(trimmed)))
+
+    def test_research_rejects_major_missing_data(self):
+        data = frames(30)
+        data["IWM"] = data["IWM"].iloc[40:]
+        with self.assertRaisesRegex(ValueError, "threshold exceeded"):
+            align_research(data)
+
+    def test_research_rejects_no_overlapping_data(self):
+        data = frames(30)
+        data["IWM"] = data["IWM"].copy()
+        data["IWM"].index += pd.Timedelta(days=365)
+        with self.assertRaisesRegex(ValueError, "No common"):
+            align_research(data)
 
     def test_constant_market_loses_cost_and_benchmark_charged(self):
         data = frames(20, constant=True)

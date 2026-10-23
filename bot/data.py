@@ -50,6 +50,28 @@ def align(frames):
     return frames
 
 
+
+def align_research(frames, max_missing_fraction=0.05):
+    """Use only observed simultaneous bars; never synthesize missing prices.
+
+    Reject histories with material cross-symbol holes instead of silently
+    making the backtest conditional on a thin or distorted IEX sample.
+    """
+    if set(frames) != set(SYMBOLS):
+        raise ValueError("Fixed universe required")
+    for symbol in SYMBOLS:
+        validate(frames[symbol])
+    common = frames[SYMBOLS[0]].index
+    for symbol in SYMBOLS[1:]:
+        common = common.intersection(frames[symbol].index, sort=False)
+    if not len(common):
+        raise ValueError("No common research timestamps")
+    counts = {s: len(frames[s]) for s in SYMBOLS}
+    if any((counts[s] - len(common)) / counts[s] > max_missing_fraction for s in SYMBOLS):
+        raise ValueError("Research cross-symbol missing-bar threshold exceeded")
+    # Retain original chronology. All rows are observed on the source feed.
+    return align({s: frames[s].loc[common].copy() for s in SYMBOLS})
+
 def fingerprint(frames):
     digest = hashlib.sha256()
     for s in SYMBOLS:

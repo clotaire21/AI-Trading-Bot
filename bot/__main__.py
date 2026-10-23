@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 from .alpaca import ReadOnlyPaper, ExecutionPaper, SafetyError
-from .data import frames_from_bars
+from .data import frames_from_bars, align_research
 from .research import compare, write_report
 from .runner import probe, cycle
 from .state import atomic_json, append_event, code_hash, load, now
@@ -45,7 +45,7 @@ def main():
                 atomic_json(directory / "research-manifest.json", manifest)
                 origin = {"kind": "alpaca_iex_download", "payload_sha256": manifest["payload_sha256"],
                           "downloaded_at": manifest["downloaded_at"]}
-            write_report(compare(frames_from_bars(raw), origin=origin), directory)
+            write_report(compare(align_research(frames_from_bars(raw)), origin=origin), directory)
             print((directory / "research.md").read_text())
         elif args.command == "validate":
             subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], check=True)
@@ -80,6 +80,8 @@ def main():
                 "Nonfinite/nonpositive OHLCV", "Inconsistent OHLC",
                 "Fixed universe required", "Missing or misaligned cross-symbol bars",
                 "At least 250 aligned sessions required",
+                "No common research timestamps",
+                "Research cross-symbol missing-bar threshold exceeded",
             )
             if str(exc) in known:
                 error["reason"] = str(exc)
