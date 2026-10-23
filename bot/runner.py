@@ -153,6 +153,15 @@ def cycle(client, directory, policy, execute=False):
         raise SafetyError("Insufficient completed bars")
     latest = index[-1]
     age = (pd.Timestamp(wall) - latest - pd.Timedelta(hours=1)).total_seconds()
+    ny_wall = wall.astimezone(ZoneInfo("America/New_York"))
+    if age > 3600 and ny_wall.hour == 10:
+        # The first scheduled UTC slot is needed after the US DST switch but
+        # can arrive before the 10:00 New York bar has closed. This is an
+        # expected wait, not stale-data evidence. No decision or order occurs.
+        append_event(directory, {"event": "waiting_for_first_complete_bar",
+                                 "account_timestamp": clock["timestamp"]})
+        atomic_json(state_path, state)
+        return
     if not 0 <= age <= 3600:
         raise SafetyError("Stale completed signal bar")
     bar = str(latest)
