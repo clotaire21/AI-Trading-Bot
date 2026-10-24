@@ -5,7 +5,7 @@
 - Audit de la V1 et conservation de son fonctionnement.
 - Trois stratégies, moteur de backtest et sélection chronologique.
 - Exécuteur Alpaca Paper verrouillé, gestion du risque et état durable.
-- 56 tests locaux réussis, dont non-régression, reprise après interruption,
+- 60 tests locaux réussis, dont non-régression, reprise après interruption,
   exécutions partielles, données périmées et absence de biais d'anticipation.
 - Commande `selfcheck` : 15 scénarios/stratégies synthétiques, sans réseau, sans
   clé et sans ordre. Vérification du pipeline complet sur 300 séances synthétiques.
@@ -25,13 +25,16 @@ performances de marché.
   stress de coûts à −7,91 %. La promotion est correctement bloquée.
 - Planning shadow activé ; le prochain créneau utile est une séance de marché.
   Aucun ordre Alpaca Paper n'est autorisé.
+- Audit historique 2018–2022 pré-déclaré et verrouillé avant lecture.
+- Canari d'exécution sur second compte Paper préparé mais désactivé par défaut.
 
 ## Prochaines étapes
 
-1. Accumuler de nouvelles observations sans réutiliser le test final comme preuve.
-2. Comparer rendement, drawdown, coûts, régularité et référence 60 % SPY + cash.
-3. Attendre au moins 60 séances et 30 allers-retours ; le rapport expose les
+1. Exécuter une fois l'audit historique verrouillé 2018–2022.
+2. Accumuler de nouvelles observations sans réutiliser le test final comme preuve.
+3. Créer et valider un second compte Alpaca Paper pour le canari opérationnel.
+4. Attendre au moins 60 séances et 30 allers-retours ; le rapport expose les
    critères encore bloquants pour chaque candidat.
-4. Activer les ordres paper seulement si une stratégie passe réellement les critères.
+5. Activer les ordres de stratégie Paper seulement si une candidate passe réellement les critères.
 
 `execution-policy.json` reste désactivée : aucune soumission d'ordre n'est possible.

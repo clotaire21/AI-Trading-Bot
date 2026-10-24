@@ -73,3 +73,12 @@ elle a été retenue face au stochastique sur les seules fenêtres antérieures 
 final, notamment pour sa meilleure résistance au stress de coûts et sa rotation
 plus faible. Cette observation future ne réécrit pas le test final déjà consulté
 et ne peut pas promouvoir automatiquement une stratégie.
+
+## Accélération verrouillée du 24 octobre 2026
+
+Le plan `accelerated-audit-plan.json` fixe avant téléchargement la période
+2018–2022, les six stratégies, le benchmark 60 % SPY, les coûts stressés et les
+seuils de diagnostic. Le rapport est explicitement inéligible à toute promotion.
+Un second chemin, `canary`, peut tester les ordres Alpaca Paper avec une stratégie
+fixe sur un autre compte de 2 000 USD. Il exige des clés, une preuve, une politique,
+un planning et un coupe-circuit distincts ; il reste désactivé par défaut.

@@ -8,6 +8,8 @@ print('# Paper lab\n')
 for name, fields in {
     'connection.json': ('at', 'read_only', 'cash_usd', 'equity_usd', 'dedicated_2000_account_ready'),
     'validation.json': ('at', 'safety_tests_passed', 'connection_passed', 'research_gate_passed'),
+    'canary-validation.json': ('at', 'safety_tests_passed', 'connection_passed', 'mode',
+                               'strategy', 'performance_evidence', 'renewal'),
     'performance.json': ('bar', 'equity_usd', 'net_modeled_equity_usd', 'return_pct', 'net_return_pct',
                          'spy_price_benchmark_usd', 'spy_return_pct', 'max_drawdown_pct', 'halted', 'daily_halt'),
 }.items():
@@ -42,3 +44,20 @@ if shadow.exists():
                   f"{int(item['round_trips'])} | {gate} | {blockers} | {positions} |")
     print(f"\n60% SPY + cash reference: **{float(data['spy_60pct_return_pct']):.2f}%**. "
           "These are modeled portfolios; no Alpaca order was sent.\n")
+
+audit = directory / 'accelerated-audit-report.json'
+if audit.exists():
+    data = json.loads(audit.read_text())
+    print('### Locked pre-2023 historical audit (diagnostic only)\n')
+    print('| Rank | Strategy | Return % | Stress % | vs 60% SPY % | Drawdown % | Trips | Screen | Blockers |')
+    print('|---:|---|---:|---:|---:|---:|---:|---|---|')
+    for rank, name in enumerate(data.get('leaderboard', []), 1):
+        item = data['strategies'][name]
+        metrics, stress = item['metrics'], item['stress_metrics']
+        screen = 'PASS' if item['robustness_screen_passed'] else 'FAIL'
+        blockers = ', '.join(item['blockers']) or 'none'
+        print(f"| {rank} | {name} | {float(metrics['return_pct']):.2f} | "
+              f"{float(stress['return_pct']):.2f} | {float(item['excess_vs_spy_60pct']):.2f} | "
+              f"{float(metrics['max_drawdown_pct']):.2f} | {int(metrics['round_trips'])} | "
+              f"{screen} | {blockers} |")
+    print('\nThis locked historical diagnostic cannot authorize any order.\n')

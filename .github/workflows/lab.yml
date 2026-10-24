@@ -5,7 +5,7 @@ on:
       command:
         description: 'preflight reads only; validate includes research; paper remains policy-gated'
         type: choice
-        options: [preflight, research, validate, shadow, paper]
+        options: [preflight, research, audit, validate, shadow, paper, canary-preflight, canary-validate, canary-paper]
         default: preflight
   schedule:
     # Seven UTC slots cover the six complete 10:00..15:00 New York bars in
@@ -25,10 +25,11 @@ jobs:
       vars.FREE_ACTIONS_CONFIRMED == 'true' &&
       (github.event_name != 'schedule' || vars.BOT_SCHEDULE_ENABLED == 'true')
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 15
     env:
       PYTHONHASHSEED: '0'
       PAPER_KILL_SWITCH: ${{ vars.PAPER_KILL_SWITCH || 'true' }}
+      CANARY_KILL_SWITCH: ${{ vars.CANARY_KILL_SWITCH || 'true' }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -45,16 +46,26 @@ jobs:
         env:
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          ALPACA_CANARY_API_KEY: ${{ secrets.ALPACA_CANARY_API_KEY }}
+          ALPACA_CANARY_SECRET_KEY: ${{ secrets.ALPACA_CANARY_SECRET_KEY }}
+          CANARY_SCHEDULE_ENABLED: ${{ vars.CANARY_SCHEDULE_ENABLED || 'false' }}
           REQUESTED_COMMAND: ${{ inputs.command || 'scheduled' }}
         shell: bash
         run: |
           set -euo pipefail
+          SCHEDULED=false
           if [ "$REQUESTED_COMMAND" = scheduled ]; then
+            SCHEDULED=true
             REQUESTED_COMMAND=$(python -c "import json; print('paper' if json.load(open('execution-policy.json'))['orders_enabled'] else 'shadow')")
+            set +e
           fi
+          run_canary() {
+            ALPACA_API_KEY="$ALPACA_CANARY_API_KEY" ALPACA_SECRET_KEY="$ALPACA_CANARY_SECRET_KEY" "$@"
+          }
           case "$REQUESTED_COMMAND" in
             preflight) python -m bot probe --state-dir runtime-state/runtime ;;
             research) python -m bot research --state-dir runtime-state/runtime ;;
+            audit) python -m bot audit --state-dir runtime-state/runtime ;;
             validate)
               python -m bot probe --state-dir runtime-state/runtime
               python -m bot research --state-dir runtime-state/runtime
@@ -67,8 +78,30 @@ jobs:
               fi
               python -m bot paper --state-dir runtime-state/runtime
               ;;
+            canary-preflight)
+              run_canary python -m bot canary-probe --state-dir runtime-state/canary
+              ;;
+            canary-validate)
+              python -m bot probe --state-dir runtime-state/runtime
+              run_canary python -m bot canary-validate --state-dir runtime-state/canary --main-state-dir runtime-state/runtime
+              ;;
+            canary-paper)
+              run_canary python -m bot canary-paper --state-dir runtime-state/canary
+              ;;
             *) exit 2 ;;
           esac
+          MAIN_STATUS=$?
+          CANARY_STATUS=0
+          if [ "$SCHEDULED" = true ] && [ "$CANARY_SCHEDULE_ENABLED" = true ]; then
+            run_canary python -m bot canary-paper --state-dir runtime-state/canary
+            CANARY_STATUS=$?
+          fi
+          if [ "$SCHEDULED" = true ]; then
+            set -e
+            if [ "$MAIN_STATUS" -ne 0 ] || [ "$CANARY_STATUS" -ne 0 ]; then
+              exit 1
+            fi
+          fi
       - name: Persist decisions even after a failed command
         if: ${{ always() && steps.state.outcome == 'success' }}
         run: bash tools/state_branch.sh save
@@ -77,3 +110,6 @@ jobs:
         shell: bash
         run: |
           python tools/summary.py runtime-state/runtime >> "$GITHUB_STEP_SUMMARY"
+          if [ -d runtime-state/canary ]; then
+            python tools/summary.py runtime-state/canary >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -37,6 +37,15 @@ commencent à zéro lors de leur première observation future. Les signaux,
 positions virtuelles, frais modélisés et performances sont conservés sans aucun
 ordre envoyé à Alpaca.
 
+Pour accélérer la validation sans diminuer les critères, deux voies sont ajoutées
+en parallèle. L'audit historique verrouillé teste une seule fois les six règles
+figées sur 2018–2022, période antérieure à la recherche principale démarrant en
+2023. Son plan est versionné avant le téléchargement et son résultat ne peut
+jamais autoriser un ordre. Un canari d'exécution séparé peut tester les véritables
+ordres Alpaca Paper sur un **deuxième compte** de 2 000 USD. Il utilise une règle
+fixe uniquement pour éprouver les remplissages, reprises et rapprochements ; sa
+performance n'est jamais une preuve d'investissement.
+
 Les plafonds s'appliquent aux ordres et aux observations périodiques. Les
 variations de prix, gaps, limites non exécutées et interruptions peuvent dépasser
 les seuils : **ils ne garantissent pas une perte maximale**.
@@ -63,6 +72,16 @@ les seuils : **ils ne garantissent pas une perte maximale**.
    nouvelle exécution des tests et génération des preuves. Une exécution verte
    peut contenir `research_gate_passed=false` ou `connection_passed=false` :
    consulter les champs, pas seulement la couleur du workflow.
+6. Lancer une seule fois **audit** pour le diagnostic historique 2018–2022. Le
+   verrou est écrit avant le téléchargement et deux reprises réseau au plus sont
+   permises sans changer le code ni le plan.
+
+Le canari nécessite ensuite un second compte Alpaca Paper neuf de 2 000 USD et
+deux secrets distincts, `ALPACA_CANARY_API_KEY` et
+`ALPACA_CANARY_SECRET_KEY`. `canary-validate` refuse le compte shadow principal.
+Même après validation, `canary-policy.json`, `CANARY_KILL_SWITCH` et
+`CANARY_SCHEDULE_ENABLED` restent trois verrous indépendants. La politique est
+désactivée par défaut.
 
 Tous les jobs, y compris la V1, sont bloqués tant que la gratuité n'est pas
 attestée. Le connecteur GitHub ne permet pas de vérifier/modifier la facturation
@@ -120,6 +139,10 @@ L'exécuteur ne possède pas d'API d'annulation ni de liquidation forcée.
 - Le suivi paper conserve valeur brute, valeur nette de coûts modélisés, rendement,
   drawdown et référence SPY en prix. Le benchmark utilise la dernière barre complète,
   le compte la valorisation du courtier ; les deux horodatages sont conservés.
+- L'audit accéléré compare les six stratégies sur 2018–2022 avec coûts normaux
+  et stressés, sans sélection rétroactive et sans droit de promotion.
+- Le canari utilise `trend_6_24` comme générateur déterministe d'ordres fictifs
+  sur le second compte. Il mesure uniquement la plomberie d'exécution.
 
 Le planning couvre 15:07 à 21:07 UTC en semaine afin d'observer les six barres
 utiles aussi bien en EDT qu'en EST. Le créneau de bord supplémentaire attend la
@@ -138,6 +161,8 @@ La branche `bot-state`, créée au premier lancement autorisé, contient `runtim
 - `state.json`, `performance.json`, journal `journal.jsonl` avec chaîne de hachage.
 - `shadow-state.json` et `shadow-performance.json` pour les six portefeuilles
   virtuels prospectifs, sans mélange avec l'état d'exécution paper.
+- `accelerated-audit-*` pour le plan verrouillé, les données et le rapport uniques ;
+- `canary/` pour les preuves, décisions et positions du second compte Paper.
 
 Les workflows sont sérialisés, sans force-push ni cache/artifact supplémentaire.
 Une intention est écrite et synchronisée localement avant la requête d'ordre,
@@ -156,10 +181,15 @@ python -m unittest discover -s tests -v
 python -m bot selfcheck --state-dir results/offline
 python -m bot probe
 python -m bot research
+python -m bot audit
 python -m bot validate
 python -m bot shadow
 # Le mode paper reste verrouillé par les preuves et la politique :
 python -m bot paper
+# Second compte Paper uniquement, verrouillé par défaut :
+python -m bot canary-probe --state-dir runtime-canary
+python -m bot canary-validate --state-dir runtime-canary --main-state-dir runtime
+python -m bot canary-paper --state-dir runtime-canary
 # Rejouer exactement une entrée sauvegardée, sans réseau ni clés :
 python -m bot research --input runtime/research-input.json --state-dir results/replay
 ```

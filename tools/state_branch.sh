@@ -26,11 +26,14 @@ case "${1:-}" in
     fi
     # Verify write capability before any hypothetical order submission.
     git -C runtime-state push --dry-run origin HEAD:refs/heads/bot-state
-    mkdir -p runtime-state/runtime
+    mkdir -p runtime-state/runtime runtime-state/canary
     ;;
   save)
     test -d runtime-state/runtime
     git -C runtime-state add runtime
+    if find runtime-state/canary -type f -print -quit | grep -q .; then
+      git -C runtime-state add canary
+    fi
     if ! git -C runtime-state diff --cached --quiet; then
       git -C runtime-state commit -m 'Record paper lab decisions and evidence'
       # No force: conflicts must stop, never erase another run's state.
