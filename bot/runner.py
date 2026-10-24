@@ -64,7 +64,7 @@ def execution_gate(directory, policy, account):
         raise SafetyError("Research gate failed")
 
 
-def cycle(client, directory, policy, execute=False):
+def cycle(client, directory, policy, execute=False, gate=execution_gate):
     directory = Path(directory)
     account, clock = client.account(), client.clock()
     positions, open_orders = client.positions(), client.orders()
@@ -74,7 +74,7 @@ def cycle(client, directory, policy, execute=False):
     if abs((wall - clock_time).total_seconds()) > 120:
         raise SafetyError("Broker clock drift")
     if execute:
-        execution_gate(directory, policy, account)
+        gate(directory, policy, account)
     if not clock["is_open"]:
         append_event(directory, {"event": "market_closed", "equity": equity})
         return

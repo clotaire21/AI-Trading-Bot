@@ -6,6 +6,8 @@ from pathlib import Path
 import subprocess
 import sys
 from .alpaca import ReadOnlyPaper, ExecutionPaper, SafetyError
+from .audit import run_locked_audit
+from .canary import canary_cycle, renew_canary, validate_canary
 from .data import frames_from_bars, align_research
 from .research import compare, write_report
 from .runner import probe, cycle
@@ -16,10 +18,15 @@ from .provenance import payload_hash, replay_origin
 
 def main():
     parser = argparse.ArgumentParser(description="Paper-only research lab; orders disabled by default")
-    parser.add_argument("command", choices=("probe", "research", "validate", "renew", "selfcheck", "shadow", "paper"))
+    parser.add_argument("command", choices=(
+        "probe", "research", "audit", "validate", "renew", "selfcheck", "shadow", "paper",
+        "canary-probe", "canary-validate", "canary-paper",
+    ))
     parser.add_argument("--state-dir", default="runtime")
     parser.add_argument("--input", help="Replay a saved Alpaca bar JSON for offline research")
     parser.add_argument("--manifest", help="Optional manifest paired with --input")
+    parser.add_argument("--main-state-dir", default="runtime",
+                        help="Main shadow state used only to prove canary account separation")
     args = parser.parse_args()
     directory = Path(args.state_dir)
     try:
@@ -48,6 +55,9 @@ def main():
                           "downloaded_at": manifest["downloaded_at"]}
             write_report(compare(align_research(frames_from_bars(raw)), origin=origin), directory)
             print((directory / "research.md").read_text())
+        elif args.command == "audit":
+            report = run_locked_audit(ReadOnlyPaper(), directory)
+            print(json.dumps(report, indent=2))
         elif args.command == "validate":
             subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], check=True)
             report = probe(ReadOnlyPaper(), directory)
@@ -66,6 +76,18 @@ def main():
         elif args.command == "shadow":
             report = shadow_cycle(ReadOnlyPaper(), directory)
             print(json.dumps(report, indent=2))
+        elif args.command == "canary-probe":
+            report = probe(ReadOnlyPaper(), directory)
+            print(json.dumps(report, indent=2))
+        elif args.command == "canary-validate":
+            subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], check=True)
+            proof = validate_canary(ReadOnlyPaper(), directory, args.main_state_dir)
+            print(json.dumps(proof, indent=2))
+        elif args.command == "canary-paper":
+            client = ExecutionPaper()
+            if (directory / "state.json").exists():
+                renew_canary(client, directory)
+            canary_cycle(client, directory, load("canary-policy.json"))
         else:
             execute = args.command == "paper"
             policy = load("execution-policy.json")

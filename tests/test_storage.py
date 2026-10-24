@@ -28,6 +28,7 @@ class StateStoreTests(unittest.TestCase):
                 subprocess.run(["bash", script, action], cwd=cwd, check=True, capture_output=True, text=True)
             state("prepare", source)
             (source / "runtime-state/runtime/state.json").write_text('{"paper": true}')
+            (source / "runtime-state/canary/canary-validation.json").write_text('{"separate": true}')
             state("save", source)
             self.assertEqual(git("rev-parse", "HEAD", cwd=source), before)
             self.assertEqual((source / "README.md").read_text(), "source\n")
@@ -35,3 +36,5 @@ class StateStoreTests(unittest.TestCase):
             git("clone", "--branch", "main", str(root / "remote.git"), str(second))
             state("prepare", second)
             self.assertEqual((second / "runtime-state/runtime/state.json").read_text(), '{"paper": true}')
+            self.assertEqual((second / "runtime-state/canary/canary-validation.json").read_text(),
+                             '{"separate": true}')

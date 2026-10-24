@@ -4,7 +4,7 @@
 
 Commande : `python -m unittest discover -s tests -v` (Python 3.12).
 
-Résultat local au 24 octobre 2026 : **56 tests réussis**, sans accès aux clés
+Résultat local au 24 octobre 2026 : **60 tests réussis**, sans accès aux clés
 réelles. Vérification de syntaxe YAML, scripts shell et compilation Python réussie.
 
 Les tests couvrent les endpoints, secrets absents, redirections, données payantes,
@@ -14,7 +14,8 @@ barres périmées, décalage d'horloge, doublons, réponse POST ambiguë, exécu
 partielle, reprise shadow, portefeuilles virtuels prospectifs, refus d'un client
 capable d'écrire en mode shadow, intégrité du journal, écriture/relecture de la branche
 d'état sans modification de main, données corrompues, absence d'anticipation,
-gaps, frais, maintien de la V1 et reproductibilité des empreintes.
+gaps, frais, maintien de la V1, verrouillage de l'audit accéléré, séparation du
+compte canari et reproductibilité des empreintes.
 
 Un essai de bout en bout du moteur compare 300 séances synthétiques, puis rejoue
 leur export OHLCV via le CLI. Il sert à vérifier la chaîne complète ; ces données
@@ -63,6 +64,12 @@ panne de données.
   avec remplissages modélisés à l'ouverture suivante et coûts hypothétiques. Il
   permet une comparaison homogène, mais ne reproduit pas les files d'attente ni
   les remplissages réels d'ordres limites Alpaca Paper.
+- L'audit 2018–2022 est verrouillé avant téléchargement, limité à trois tentatives
+  identiques en cas de panne et explicitement inéligible à l'exécution. Il apporte
+  un diagnostic historique supplémentaire, pas une observation future.
+- Le canari ne peut fonctionner qu'avec un second compte Paper, un code validé,
+  une preuve récente, une politique dédiée et un coupe-circuit distinct. Sa
+  stratégie fixe teste l'exécution et ne constitue pas une preuve de performance.
 - Le journal est chaîné pour détecter une altération accidentelle ; ce n'est pas
   une signature cryptographique contre un acteur pouvant réécrire tout le dépôt.
 - Les preuves expirent après sept jours. Le workflow paper renouvelle automatiquement
@@ -72,7 +79,7 @@ panne de données.
 
 ## Prochaine étape indispensable
 
-Laisser `shadow` accumuler de nouvelles observations sur `main`, puis comparer les
-candidats après au moins 60 séances et 30 allers-retours. Le classement et ses
-motifs de blocage sont informatifs : les ordres Alpaca Paper restent interdits tant
-qu'aucune stratégie ne passe les critères prospectifs et le stress de coûts.
+Exécuter une fois l'audit historique verrouillé, laisser `shadow` accumuler de
+nouvelles observations et préparer séparément le compte canari. Après au moins
+60 séances et 30 allers-retours, une candidate pourra passer aux ordres Paper ;
+aucun de ces raccourcis n'autorise de capital réel.

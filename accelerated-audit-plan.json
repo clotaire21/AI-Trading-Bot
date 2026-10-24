@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "purpose": "one_shot_pre_2023_resilience_check_no_promotion",
+  "start": "2018-01-01T00:00:00Z",
+  "end": "2023-01-01T00:00:00Z",
+  "strategies": [
+    "trend_6_24",
+    "breakout_12",
+    "reversion_20",
+    "selective_reversion_20",
+    "trend_24_72",
+    "rsi25_trend"
+  ],
+  "minimum_sessions": 750,
+  "minimum_round_trips": 30,
+  "stress_slippage_bps_per_side": 29,
+  "benchmark_allocation": 0.6
+}
