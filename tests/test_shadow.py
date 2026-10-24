@@ -7,6 +7,7 @@ import numpy as np
 from bot.alpaca import ExecutionPaper, SafetyError
 from bot.shadow import advance, shadow_cycle
 from bot.state import load
+from bot.strategies import SHADOW_STRATEGIES, STRATEGIES
 from helpers import frames
 
 
@@ -28,7 +29,13 @@ class ShadowTests(unittest.TestCase):
 
     def test_starts_forward_only_then_fills_next_unseen_bar(self):
         first = advance(self.slice(-1), self.directory, "account")
+        self.assertEqual(first["schema"], 2)
+        self.assertIn("rsi25_trend", first["strategies"])
         self.assertTrue(all(item["fills"] == 0 for item in first["strategies"].values()))
+        self.assertTrue(all(not item["forward_gate_passed"]
+                            for item in first["strategies"].values()))
+        self.assertTrue(all("below_60_sessions" in item["blockers"]
+                            for item in first["strategies"].values()))
         self.assertEqual(first["strategies"]["trend_6_24"]["pending"]["side"], "buy")
 
         second = advance(self.data, self.directory, "account")
@@ -59,6 +66,10 @@ class ShadowTests(unittest.TestCase):
         with self.assertRaisesRegex(SafetyError, "read-only"):
             shadow_cycle(client, self.directory)
         client.account.assert_not_called()
+
+    def test_rsi_candidate_is_shadow_only_and_cannot_be_executed(self):
+        self.assertIn("rsi25_trend", SHADOW_STRATEGIES)
+        self.assertNotIn("rsi25_trend", STRATEGIES)
 
 
 if __name__ == "__main__":

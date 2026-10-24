@@ -22,6 +22,7 @@ from .strategies import SHADOW_STRATEGIES, SHADOW_WARMUP, signals
 
 STATE_FILE = "shadow-state.json"
 REPORT_FILE = "shadow-performance.json"
+SHADOW_SCHEMA = 2
 
 
 def _account_hash(account):
@@ -41,7 +42,7 @@ def _new_portfolio(timestamp):
         "positions": {}, "pending": None, "peak": LIMITS.capital,
         "max_drawdown": 0.0, "day": None, "day_start": LIMITS.capital,
         "daily_halt": False, "halted": False, "orders_today": 0,
-        "fills": 0, "round_trips": 0, "modeled_cost": 0.0,
+        "sessions": 0, "fills": 0, "round_trips": 0, "modeled_cost": 0.0,
     }
 
 
@@ -139,6 +140,7 @@ def _process_bar(state, frames, i):
         if day != portfolio["day"]:
             portfolio.update(day=day, day_start=portfolio["equity"],
                              daily_halt=False, orders_today=0)
+            portfolio["sessions"] += 1
         for position in portfolio["positions"].values():
             position["bars_held"] += 1
         opening_equity = _value(portfolio, frames, i, "Open")
@@ -172,24 +174,38 @@ def _report(state, frames):
     strategies = {}
     for name in SHADOW_STRATEGIES:
         portfolio = state["strategies"][name]
+        return_pct = (portfolio["equity"] / LIMITS.capital - 1) * 100
+        drawdown_pct = portfolio["max_drawdown"] * 100
+        excess_pct = return_pct - (spy_value / LIMITS.capital - 1) * 100
+        blockers = []
+        if portfolio["sessions"] < 60: blockers.append("below_60_sessions")
+        if portfolio["round_trips"] < 30: blockers.append("below_30_round_trips")
+        if return_pct <= 0: blockers.append("not_profitable")
+        if excess_pct <= 0: blockers.append("does_not_beat_60pct_spy")
+        if drawdown_pct < -LIMITS.drawdown * 100: blockers.append("drawdown_exceeds_limit")
+        if portfolio["halted"]: blockers.append("risk_circuit_breaker_triggered")
         strategies[name] = {
             "started_at": portfolio["started_at"],
             "equity_usd": portfolio["equity"],
-            "return_pct": (portfolio["equity"] / LIMITS.capital - 1) * 100,
-            "max_drawdown_pct": portfolio["max_drawdown"] * 100,
+            "return_pct": return_pct, "excess_vs_spy_pct": excess_pct,
+            "max_drawdown_pct": drawdown_pct, "sessions": portfolio["sessions"],
             "modeled_cost_usd": portfolio["modeled_cost"],
             "fills": portfolio["fills"], "round_trips": portfolio["round_trips"],
             "positions": sorted(portfolio["positions"]),
             "pending": portfolio["pending"], "halted": portfolio["halted"],
+            "forward_gate_passed": not blockers, "blockers": blockers,
         }
+    leaderboard = sorted(SHADOW_STRATEGIES, key=lambda name: (
+        strategies[name]["forward_gate_passed"], strategies[name]["excess_vs_spy_pct"],
+        strategies[name]["return_pct"], strategies[name]["max_drawdown_pct"]), reverse=True)
     return {
-        "schema": 1, "mode": "forward_shadow_no_orders", "bar": str(latest),
+        "schema": SHADOW_SCHEMA, "mode": "forward_shadow_no_orders", "bar": str(latest),
         "code_sha256": state["code_sha256"],
         "capital_per_strategy_usd": LIMITS.capital,
         "spy_60pct_value_usd": spy_value,
         "spy_60pct_return_pct": (spy_value / LIMITS.capital - 1) * 100,
-        "strategies": strategies,
-        "warning": "Modeled portfolios only; no Alpaca orders or promotion evidence.",
+        "strategies": strategies, "leaderboard": leaderboard,
+        "warning": "Modeled portfolios only; forward gate is diagnostic and cannot authorize Alpaca orders.",
     }
 
 
@@ -203,7 +219,7 @@ def advance(frames, directory, account_hash):
     path = directory / STATE_FILE
     if path.exists():
         state = load(path)
-        if state.get("schema") != 1 or state.get("account_hash") != account_hash:
+        if state.get("schema") != SHADOW_SCHEMA or state.get("account_hash") != account_hash:
             raise SafetyError("Invalid shadow state/account")
         if state.get("code_sha256") != code_hash():
             raise SafetyError("Shadow code changed; explicit state migration required")
@@ -218,7 +234,7 @@ def advance(frames, directory, account_hash):
     else:
         latest = index[-1]
         state = {
-            "schema": 1, "created_at": now(), "account_hash": account_hash,
+            "schema": SHADOW_SCHEMA, "created_at": now(), "account_hash": account_hash,
             "code_sha256": code_hash(),
             "last_bar": None, "spy_start": float(frames["SPY"].Close.iloc[-1]),
             "strategies": {name: _new_portfolio(latest) for name in SHADOW_STRATEGIES},
