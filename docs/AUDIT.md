@@ -65,8 +65,11 @@ final du 21 janvier au 22 octobre 2026 a invalidé `breakout_12` : −2,85 %, co
 +7,55 % pour 60 % SPY + cash, et −7,91 % sous slippage renforcé. Les ordres restent
 donc désactivés.
 
-Le mode shadow est étendu à cinq portefeuilles virtuels prospectifs indépendants.
-Les trois stratégies historiques et deux hypothèses pré-déclarées commencent avec
+Le mode shadow est étendu à six portefeuilles virtuels prospectifs indépendants.
+Les trois stratégies historiques et trois hypothèses pré-déclarées commencent avec
 2 000 USD chacune, comptabilisent les coûts et sont comparées à 60 % SPY + cash.
-Cette observation future ne réécrit pas le test final déjà consulté et ne peut pas
-promouvoir automatiquement une stratégie.
+La troisième hypothèse combine RSI(14) inférieur à 25 et tendance 24/72 positive ;
+elle a été retenue face au stochastique sur les seules fenêtres antérieures au test
+final, notamment pour sa meilleure résistance au stress de coûts et sa rotation
+plus faible. Cette observation future ne réécrit pas le test final déjà consulté
+et ne peut pas promouvoir automatiquement une stratégie.

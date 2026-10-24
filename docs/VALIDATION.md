@@ -4,7 +4,7 @@
 
 Commande : `python -m unittest discover -s tests -v` (Python 3.12).
 
-Résultat local au 23 octobre 2026 : **55 tests réussis**, sans accès aux clés
+Résultat local au 24 octobre 2026 : **56 tests réussis**, sans accès aux clés
 réelles. Vérification de syntaxe YAML, scripts shell et compilation Python réussie.
 
 Les tests couvrent les endpoints, secrets absents, redirections, données payantes,
@@ -59,7 +59,7 @@ panne de données.
 - À raison d'un ordre par cycle, plusieurs sorties nécessaires peuvent prendre
   plusieurs heures. Les seuils et la durée maximale sont observés périodiquement,
   non garantis ; un ordre limite peut ne pas se remplir.
-- Le mode shadow maintient cinq portefeuilles virtuels prospectifs indépendants,
+- Le mode shadow maintient six portefeuilles virtuels prospectifs indépendants,
   avec remplissages modélisés à l'ouverture suivante et coûts hypothétiques. Il
   permet une comparaison homogène, mais ne reproduit pas les files d'attente ni
   les remplissages réels d'ordres limites Alpaca Paper.
@@ -72,7 +72,7 @@ panne de données.
 
 ## Prochaine étape indispensable
 
-Fusionner le suivi parallèle, laisser `shadow` accumuler de nouvelles observations
-sur `main`, puis comparer les candidats après une durée et un nombre de transactions
-suffisants. Les ordres Alpaca Paper restent interdits tant qu'aucune stratégie ne
-passe les critères prospectifs et le stress de coûts.
+Laisser `shadow` accumuler de nouvelles observations sur `main`, puis comparer les
+candidats après au moins 60 séances et 30 allers-retours. Le classement et ses
+motifs de blocage sont informatifs : les ordres Alpaca Paper restent interdits tant
+qu'aucune stratégie ne passe les critères prospectifs et le stress de coûts.

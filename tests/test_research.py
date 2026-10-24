@@ -6,7 +6,7 @@ from bot.backtest import run, benchmark
 from bot.config import LIMITS, SYMBOLS
 from bot.data import validate, align, align_research, fingerprint, frames_from_bars
 from bot.research import compare
-from bot.strategies import signals, STRATEGIES
+from bot.strategies import signals, SHADOW_STRATEGIES, STRATEGIES
 from helpers import frames, raw_bars
 
 
@@ -21,7 +21,7 @@ class ResearchTests(unittest.TestCase):
         point = data["SPY"].index[180]
         for f in changed.values():
             f.loc[point:, ["Open", "High", "Low", "Close"]] *= 1.4
-        for strategy in STRATEGIES:
+        for strategy in SHADOW_STRATEGIES:
             pd.testing.assert_frame_equal(signals(data["SPY"], strategy).loc[:point].iloc[:-1],
                                           signals(changed["SPY"], strategy).loc[:point].iloc[:-1])
             a, b = run(data, strategy), run(changed, strategy)

@@ -26,15 +26,19 @@ shadow = directory / 'shadow-performance.json'
 if shadow.exists():
     data = json.loads(shadow.read_text())
     print('### Forward shadow comparison (no orders)\n')
-    print('| Strategy | Virtual equity | Return % | Max drawdown % | Modeled costs | Round trips | Positions |')
-    print('|---|---:|---:|---:|---:|---:|---|')
+    print('| Rank | Strategy | Sessions | Equity | Return % | vs SPY % | Drawdown % | Costs | Trips | Gate | Blockers | Positions |')
+    print('|---:|---|---:|---:|---:|---:|---:|---:|---:|---|---|---|')
     for name in ('trend_6_24', 'breakout_12', 'reversion_20',
-                 'selective_reversion_20', 'trend_24_72'):
+                 'selective_reversion_20', 'trend_24_72', 'rsi25_trend'):
         item = data.get('strategies', {}).get(name)
         if item:
             positions = ', '.join(item.get('positions', [])) or 'cash'
-            print(f"| {name} | ${float(item['equity_usd']):.2f} | {float(item['return_pct']):.2f} | "
+            blockers = ', '.join(item.get('blockers', [])) or 'none'
+            rank = data.get('leaderboard', []).index(name) + 1
+            gate = 'PASS' if item.get('forward_gate_passed') else 'WAIT'
+            print(f"| {rank} | {name} | {int(item['sessions'])} | ${float(item['equity_usd']):.2f} | "
+                  f"{float(item['return_pct']):.2f} | {float(item['excess_vs_spy_pct']):.2f} | "
                   f"{float(item['max_drawdown_pct']):.2f} | ${float(item['modeled_cost_usd']):.2f} | "
-                  f"{int(item['round_trips'])} | {positions} |")
+                  f"{int(item['round_trips'])} | {gate} | {blockers} | {positions} |")
     print(f"\n60% SPY + cash reference: **{float(data['spy_60pct_return_pct']):.2f}%**. "
           "These are modeled portfolios; no Alpaca order was sent.\n")
