@@ -1,0 +1,1 @@
+{"at": "2026-10-24T07:50:28.001828+00:00", "command": "canary-probe", "event": "failure", "hash": "735c0dc9622eb5f72461742c43eddbbc10d5ddf345ffd0a718cb93f85082c41a", "previous": "0000000000000000000000000000000000000000000000000000000000000000", "reason": "Alpaca HTTP 401; no retry", "type": "SafetyError"}
