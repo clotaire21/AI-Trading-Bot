@@ -1,0 +1,227 @@
+{
+  "schema": 1,
+  "mode": "locked_historical_diagnostic_no_promotion",
+  "created_at": "2026-10-24T07:44:44.964009+00:00",
+  "locked_at": "2026-10-24T07:44:22.214460+00:00",
+  "plan_sha256": "f7f255db2fe218cf2e15c24394e43bb688dbac83de032a7af91677aee29817f8",
+  "code_sha256": "31e357916a0bbb7df545fc07ff8296952474e5ba5c981ee5d8d17288f7440504",
+  "input_payload_sha256": "0df3df0f268aa584faeaed418aab55abfaaf7cb0029bfb768c081eb633846466",
+  "data_sha256": "193e44f2ac65406a9ef9e6fdf5ebbda89c0976c91bdc90f1e9ed00765a250c12",
+  "period": {
+    "start": "2020-08-12 14:00:00+00:00",
+    "end": "2022-12-30 21:00:00+00:00"
+  },
+  "feed": "iex",
+  "adjustment": "all",
+  "spy_60pct": {
+    "final_capital_usd": 2213.966982878648,
+    "return_pct": 10.698349143932418,
+    "max_drawdown_pct": -17.28217171240811,
+    "sharpe_daily": 0.40789057615472113,
+    "orders": 2,
+    "round_trips": 1,
+    "days": 602,
+    "modeled_cost_usd": 2.61416383644566
+  },
+  "strategies": {
+    "trend_6_24": {
+      "metrics": {
+        "final_capital_usd": 1894.7660865677403,
+        "return_pct": -5.261695671612987,
+        "max_drawdown_pct": -8.727276405025941,
+        "sharpe_daily": -0.48463919209650386,
+        "orders": 622,
+        "round_trips": 311,
+        "days": 602,
+        "modeled_cost_usd": 243.64058347898435
+      },
+      "stress_metrics": {
+        "final_capital_usd": 1857.236776868236,
+        "return_pct": -7.1381611565882075,
+        "max_drawdown_pct": -8.219975950547232,
+        "sharpe_daily": -0.9273351574597835,
+        "orders": 246,
+        "round_trips": 123,
+        "days": 602,
+        "modeled_cost_usd": 283.0141988651752
+      },
+      "excess_vs_spy_60pct": -15.960044815545405,
+      "robustness_screen_passed": false,
+      "blockers": [
+        "below_750_sessions",
+        "not_profitable",
+        "does_not_beat_60pct_spy",
+        "drawdown_exceeds_limit",
+        "fails_cost_stress",
+        "risk_circuit_breaker_triggered"
+      ]
+    },
+    "breakout_12": {
+      "metrics": {
+        "final_capital_usd": 1889.2843475584095,
+        "return_pct": -5.535782622079521,
+        "max_drawdown_pct": -8.64560227328931,
+        "sharpe_daily": -0.5847427260516681,
+        "orders": 502,
+        "round_trips": 251,
+        "days": 602,
+        "modeled_cost_usd": 197.9827033714164
+      },
+      "stress_metrics": {
+        "final_capital_usd": 1859.973890906565,
+        "return_pct": -7.001305454671747,
+        "max_drawdown_pct": -8.09869716291537,
+        "sharpe_daily": -1.1395037327151871,
+        "orders": 210,
+        "round_trips": 105,
+        "days": 602,
+        "modeled_cost_usd": 240.9982417243817
+      },
+      "excess_vs_spy_60pct": -16.23413176601194,
+      "robustness_screen_passed": false,
+      "blockers": [
+        "below_750_sessions",
+        "not_profitable",
+        "does_not_beat_60pct_spy",
+        "drawdown_exceeds_limit",
+        "fails_cost_stress",
+        "risk_circuit_breaker_triggered"
+      ]
+    },
+    "reversion_20": {
+      "metrics": {
+        "final_capital_usd": 1884.546846729047,
+        "return_pct": -5.772657663547642,
+        "max_drawdown_pct": -8.134008435228445,
+        "sharpe_daily": -0.4522834464715298,
+        "orders": 442,
+        "round_trips": 221,
+        "days": 602,
+        "modeled_cost_usd": 173.03270596069706
+      },
+      "stress_metrics": {
+        "final_capital_usd": 1836.6654848970009,
+        "return_pct": -8.166725755149962,
+        "max_drawdown_pct": -8.17513266443628,
+        "sharpe_daily": -0.9771659005429185,
+        "orders": 218,
+        "round_trips": 109,
+        "days": 602,
+        "modeled_cost_usd": 246.40652051645407
+      },
+      "excess_vs_spy_60pct": -16.47100680748006,
+      "robustness_screen_passed": false,
+      "blockers": [
+        "below_750_sessions",
+        "not_profitable",
+        "does_not_beat_60pct_spy",
+        "drawdown_exceeds_limit",
+        "fails_cost_stress",
+        "risk_circuit_breaker_triggered"
+      ]
+    },
+    "selective_reversion_20": {
+      "metrics": {
+        "final_capital_usd": 1989.8215929699386,
+        "return_pct": -0.5089203515030727,
+        "max_drawdown_pct": -6.517815862220122,
+        "sharpe_daily": -0.07731231054807829,
+        "orders": 208,
+        "round_trips": 104,
+        "days": 602,
+        "modeled_cost_usd": 82.31608007885696
+      },
+      "stress_metrics": {
+        "final_capital_usd": 1843.8476117140244,
+        "return_pct": -7.807619414298783,
+        "max_drawdown_pct": -8.818999005488926,
+        "sharpe_daily": -1.4428635164915704,
+        "orders": 194,
+        "round_trips": 97,
+        "days": 602,
+        "modeled_cost_usd": 227.28582386243676
+      },
+      "excess_vs_spy_60pct": -11.20726949543549,
+      "robustness_screen_passed": false,
+      "blockers": [
+        "below_750_sessions",
+        "not_profitable",
+        "does_not_beat_60pct_spy",
+        "fails_cost_stress",
+        "risk_circuit_breaker_triggered"
+      ]
+    },
+    "trend_24_72": {
+      "metrics": {
+        "final_capital_usd": 1992.3423726205933,
+        "return_pct": -0.38288136897033365,
+        "max_drawdown_pct": -8.072223810717038,
+        "sharpe_daily": -0.017358062157302158,
+        "orders": 496,
+        "round_trips": 248,
+        "days": 602,
+        "modeled_cost_usd": 196.4082430324668
+      },
+      "stress_metrics": {
+        "final_capital_usd": 1857.0476493200829,
+        "return_pct": -7.147617533995854,
+        "max_drawdown_pct": -8.31339156858817,
+        "sharpe_daily": -0.7722029999638271,
+        "orders": 268,
+        "round_trips": 134,
+        "days": 602,
+        "modeled_cost_usd": 313.42357729703366
+      },
+      "excess_vs_spy_60pct": -11.081230512902753,
+      "robustness_screen_passed": false,
+      "blockers": [
+        "below_750_sessions",
+        "not_profitable",
+        "does_not_beat_60pct_spy",
+        "drawdown_exceeds_limit",
+        "fails_cost_stress",
+        "risk_circuit_breaker_triggered"
+      ]
+    },
+    "rsi25_trend": {
+      "metrics": {
+        "final_capital_usd": 2003.221770998783,
+        "return_pct": 0.1610885499391479,
+        "max_drawdown_pct": -0.40179551791137413,
+        "sharpe_daily": 0.1792119287602033,
+        "orders": 18,
+        "round_trips": 9,
+        "days": 602,
+        "modeled_cost_usd": 7.1312305504190405
+      },
+      "stress_metrics": {
+        "final_capital_usd": 1989.0011212484794,
+        "return_pct": -0.5499439375760251,
+        "max_drawdown_pct": -1.0688795136992502,
+        "sharpe_daily": -0.5956414014773664,
+        "orders": 18,
+        "round_trips": 9,
+        "days": 602,
+        "modeled_cost_usd": 21.337294414069014
+      },
+      "excess_vs_spy_60pct": -10.53726059399327,
+      "robustness_screen_passed": false,
+      "blockers": [
+        "below_750_sessions",
+        "below_30_round_trips",
+        "does_not_beat_60pct_spy",
+        "fails_cost_stress"
+      ]
+    }
+  },
+  "leaderboard": [
+    "rsi25_trend",
+    "trend_24_72",
+    "selective_reversion_20",
+    "trend_6_24",
+    "breakout_12",
+    "reversion_20"
+  ],
+  "eligible_for_execution": false,
+  "warning": "One-shot historical diagnostic only; it cannot authorize paper or live orders."
+}

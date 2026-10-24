@@ -1,0 +1,11 @@
+{
+  "downloaded_at": "2026-10-24T07:44:41.969018+00:00",
+  "start": "2018-01-01T00:00:00Z",
+  "end": "2023-01-01T00:00:00Z",
+  "source": "alpaca_iex_download",
+  "payload_sha256": "0df3df0f268aa584faeaed418aab55abfaaf7cb0029bfb768c081eb633846466",
+  "feed": "iex",
+  "adjustment": "all",
+  "timeframe": "1Hour",
+  "plan_sha256": "f7f255db2fe218cf2e15c24394e43bb688dbac83de032a7af91677aee29817f8"
+}
