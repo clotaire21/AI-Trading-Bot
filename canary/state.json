@@ -6,21 +6,18 @@
   "daily_halt": false,
   "halted": false,
   "orders_today": 1,
-  "entries": {},
-  "last_bar": "2026-10-26 17:00:00+00:00",
-  "pending": {
-    "symbol": "IWM",
-    "side": "buy",
-    "qty": "1.425075",
-    "limit_price": "277.88",
-    "client_id": "lab-584e06a939d3d4946e2dae8d30f36c5f",
-    "bar": "2026-10-26 17:00:00+00:00"
+  "entries": {
+    "IWM": "2026-10-26 17:00:00+00:00"
   },
+  "last_bar": "2026-10-26 17:00:00+00:00",
+  "pending": null,
   "benchmark_start": 765.95,
   "initial_equity": 2000.0,
-  "modeled_cost": 0.0,
-  "tracked_quantities": {},
-  "tracked_cash": 2000.0,
-  "last_equity": 2000.0,
-  "max_drawdown": 0
+  "modeled_cost": 0.3953585572500001,
+  "tracked_quantities": {
+    "IWM": "1.425075"
+  },
+  "tracked_cash": 1604.64144275,
+  "last_equity": 1999.5646414427501,
+  "max_drawdown": -0.00021767927862492709
 }
