@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "at": "2026-10-26T11:10:12.412362+00:00",
+  "initial_validated_at": "2026-10-26T11:10:12.412369+00:00",
+  "code_sha256": "31e357916a0bbb7df545fc07ff8296952474e5ba5c981ee5d8d17288f7440504",
+  "safety_tests_passed": true,
+  "connection_passed": true,
+  "account_hash": "ccc88de6d470ba921ed8bfe4169eb64dd8325f541ee46755fd85ee0961d92b15",
+  "main_account_hash": "67b6b0fef12f5bdf131a206fcef3d65035e9dd24d3b053ef72a88823ffccd0b1",
+  "mode": "operational_canary_only",
+  "strategy": "trend_6_24",
+  "performance_evidence": false
+}
