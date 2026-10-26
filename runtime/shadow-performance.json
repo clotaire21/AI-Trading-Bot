@@ -1,0 +1,150 @@
+{
+  "schema": 2,
+  "mode": "forward_shadow_no_orders",
+  "bar": "2026-10-26 19:00:00+00:00",
+  "code_sha256": "31e357916a0bbb7df545fc07ff8296952474e5ba5c981ee5d8d17288f7440504",
+  "capital_per_strategy_usd": 2000.0,
+  "spy_60pct_value_usd": 1998.801198801199,
+  "spy_60pct_return_pct": -0.05994005994004459,
+  "strategies": {
+    "trend_6_24": {
+      "started_at": "2026-10-26 19:00:00+00:00",
+      "equity_usd": 2000.0,
+      "return_pct": 0.0,
+      "excess_vs_spy_pct": 0.05994005994004459,
+      "max_drawdown_pct": 0.0,
+      "sessions": 1,
+      "modeled_cost_usd": 0.0,
+      "fills": 0,
+      "round_trips": 0,
+      "positions": [],
+      "pending": {
+        "symbol": "QQQ",
+        "side": "buy",
+        "reason": "signal_entry",
+        "signal_bar": "2026-10-26 19:00:00+00:00"
+      },
+      "halted": false,
+      "forward_gate_passed": false,
+      "blockers": [
+        "below_60_sessions",
+        "below_30_round_trips",
+        "not_profitable"
+      ]
+    },
+    "breakout_12": {
+      "started_at": "2026-10-26 19:00:00+00:00",
+      "equity_usd": 2000.0,
+      "return_pct": 0.0,
+      "excess_vs_spy_pct": 0.05994005994004459,
+      "max_drawdown_pct": 0.0,
+      "sessions": 1,
+      "modeled_cost_usd": 0.0,
+      "fills": 0,
+      "round_trips": 0,
+      "positions": [],
+      "pending": null,
+      "halted": false,
+      "forward_gate_passed": false,
+      "blockers": [
+        "below_60_sessions",
+        "below_30_round_trips",
+        "not_profitable"
+      ]
+    },
+    "reversion_20": {
+      "started_at": "2026-10-26 19:00:00+00:00",
+      "equity_usd": 2000.0,
+      "return_pct": 0.0,
+      "excess_vs_spy_pct": 0.05994005994004459,
+      "max_drawdown_pct": 0.0,
+      "sessions": 1,
+      "modeled_cost_usd": 0.0,
+      "fills": 0,
+      "round_trips": 0,
+      "positions": [],
+      "pending": null,
+      "halted": false,
+      "forward_gate_passed": false,
+      "blockers": [
+        "below_60_sessions",
+        "below_30_round_trips",
+        "not_profitable"
+      ]
+    },
+    "selective_reversion_20": {
+      "started_at": "2026-10-26 19:00:00+00:00",
+      "equity_usd": 2000.0,
+      "return_pct": 0.0,
+      "excess_vs_spy_pct": 0.05994005994004459,
+      "max_drawdown_pct": 0.0,
+      "sessions": 1,
+      "modeled_cost_usd": 0.0,
+      "fills": 0,
+      "round_trips": 0,
+      "positions": [],
+      "pending": null,
+      "halted": false,
+      "forward_gate_passed": false,
+      "blockers": [
+        "below_60_sessions",
+        "below_30_round_trips",
+        "not_profitable"
+      ]
+    },
+    "trend_24_72": {
+      "started_at": "2026-10-26 19:00:00+00:00",
+      "equity_usd": 2000.0,
+      "return_pct": 0.0,
+      "excess_vs_spy_pct": 0.05994005994004459,
+      "max_drawdown_pct": 0.0,
+      "sessions": 1,
+      "modeled_cost_usd": 0.0,
+      "fills": 0,
+      "round_trips": 0,
+      "positions": [],
+      "pending": {
+        "symbol": "IWM",
+        "side": "buy",
+        "reason": "signal_entry",
+        "signal_bar": "2026-10-26 19:00:00+00:00"
+      },
+      "halted": false,
+      "forward_gate_passed": false,
+      "blockers": [
+        "below_60_sessions",
+        "below_30_round_trips",
+        "not_profitable"
+      ]
+    },
+    "rsi25_trend": {
+      "started_at": "2026-10-26 19:00:00+00:00",
+      "equity_usd": 2000.0,
+      "return_pct": 0.0,
+      "excess_vs_spy_pct": 0.05994005994004459,
+      "max_drawdown_pct": 0.0,
+      "sessions": 1,
+      "modeled_cost_usd": 0.0,
+      "fills": 0,
+      "round_trips": 0,
+      "positions": [],
+      "pending": null,
+      "halted": false,
+      "forward_gate_passed": false,
+      "blockers": [
+        "below_60_sessions",
+        "below_30_round_trips",
+        "not_profitable"
+      ]
+    }
+  },
+  "leaderboard": [
+    "trend_6_24",
+    "breakout_12",
+    "reversion_20",
+    "selective_reversion_20",
+    "trend_24_72",
+    "rsi25_trend"
+  ],
+  "warning": "Modeled portfolios only; forward gate is diagnostic and cannot authorize Alpaca orders."
+}
