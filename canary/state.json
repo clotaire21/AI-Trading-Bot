@@ -1,0 +1,26 @@
+{
+  "account_hash": "ccc88de6d470ba921ed8bfe4169eb64dd8325f541ee46755fd85ee0961d92b15",
+  "peak": 2000.0,
+  "day": "2026-10-26",
+  "day_start": 2000.0,
+  "daily_halt": false,
+  "halted": false,
+  "orders_today": 1,
+  "entries": {},
+  "last_bar": "2026-10-26 17:00:00+00:00",
+  "pending": {
+    "symbol": "IWM",
+    "side": "buy",
+    "qty": "1.425075",
+    "limit_price": "277.88",
+    "client_id": "lab-584e06a939d3d4946e2dae8d30f36c5f",
+    "bar": "2026-10-26 17:00:00+00:00"
+  },
+  "benchmark_start": 765.95,
+  "initial_equity": 2000.0,
+  "modeled_cost": 0.0,
+  "tracked_quantities": {},
+  "tracked_cash": 2000.0,
+  "last_equity": 2000.0,
+  "max_drawdown": 0
+}
