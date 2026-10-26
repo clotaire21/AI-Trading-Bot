@@ -1,1 +1,2 @@
 {"at": "2026-10-24T07:50:28.001828+00:00", "command": "canary-probe", "event": "failure", "hash": "735c0dc9622eb5f72461742c43eddbbc10d5ddf345ffd0a718cb93f85082c41a", "previous": "0000000000000000000000000000000000000000000000000000000000000000", "reason": "Alpaca HTTP 401; no retry", "type": "SafetyError"}
+{"at": "2026-10-26T12:16:48.919536+00:00", "equity": 2000.0, "event": "market_closed", "hash": "be69979f57eaf207877112cb4e8b19ff013e7e00790bfbcc37675e7da047a8c2", "previous": "735c0dc9622eb5f72461742c43eddbbc10d5ddf345ffd0a718cb93f85082c41a"}
