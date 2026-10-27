@@ -1,0 +1,44 @@
+name: Paper canary — risk watchdog
+on:
+  workflow_dispatch:
+  schedule:
+    # Independent quarter-hour checks reduce exposure to a delayed/dropped
+    # hourly strategy run. The odd minutes avoid GitHub's busiest boundary.
+    - cron: '13,28,43,58 9-15 * * 1-5'
+      timezone: 'America/New_York'
+permissions:
+  contents: write
+concurrency:
+  group: paper-lab-state
+  cancel-in-progress: false
+jobs:
+  risk:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      vars.FREE_ACTIONS_CONFIRMED == 'true' &&
+      vars.CANARY_SCHEDULE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONHASHSEED: '0'
+      CANARY_KILL_SWITCH: ${{ vars.CANARY_KILL_SWITCH || 'true' }}
+      ALPACA_API_KEY: ${{ secrets.ALPACA_CANARY_API_KEY }}
+      ALPACA_SECRET_KEY: ${{ secrets.ALPACA_CANARY_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Install pinned runtime libraries
+        run: python -m pip install --disable-pip-version-check -r requirements-research.txt
+      - name: Prepare durable state and verify Git write access
+        id: state
+        run: bash tools/state_branch.sh prepare
+      - name: Check canary risk without waiting for an hourly bar
+        run: python -m bot canary-risk --state-dir runtime-state/canary
+      - name: Persist risk decisions even after a failed command
+        if: ${{ always() && steps.state.outcome == 'success' }}
+        run: bash tools/state_branch.sh save
+      - name: Publish concise run summary
+        if: ${{ always() && steps.state.outcome == 'success' }}
+        run: python tools/summary.py runtime-state/canary >> "$GITHUB_STEP_SUMMARY"

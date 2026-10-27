@@ -5,12 +5,13 @@ on:
       command:
         description: 'preflight reads only; validate includes research; paper remains policy-gated'
         type: choice
-        options: [preflight, research, audit, validate, shadow, paper, canary-preflight, canary-validate, canary-paper]
+        options: [preflight, research, audit, validate, shadow, paper, canary-preflight, canary-validate, canary-migrate, canary-paper]
         default: preflight
   schedule:
-    # Seven UTC slots cover the six complete 10:00..15:00 New York bars in
-    # both EDT and EST. The extra edge slot exits safely (pre-bar or closed).
-    - cron: '7 15-21 * * 1-5'
+    # GitHub documents that jobs near the start of an hour are more likely to
+    # be delayed or dropped. Use New York time to avoid DST conversion errors.
+    - cron: '23 10-16 * * 1-5'
+      timezone: 'America/New_York'
 permissions:
   contents: write
 concurrency:
@@ -84,6 +85,10 @@ jobs:
             canary-validate)
               python -m bot probe --state-dir runtime-state/runtime
               run_canary python -m bot canary-validate --state-dir runtime-state/canary --main-state-dir runtime-state/runtime
+              ;;
+            canary-migrate)
+              python -m bot probe --state-dir runtime-state/runtime
+              run_canary python -m bot canary-migrate --state-dir runtime-state/canary --main-state-dir runtime-state/runtime
               ;;
             canary-paper)
               run_canary python -m bot canary-paper --state-dir runtime-state/canary
