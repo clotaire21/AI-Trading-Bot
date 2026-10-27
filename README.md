@@ -19,7 +19,7 @@ preuve de rentabilité.
 | Levier / ventes à découvert | interdits ; le buying power n'est jamais utilisé |
 | Perte quotidienne | 2 % ; suspension des entrées jusqu'à la séance suivante |
 | Drawdown | 8 % ; suspension persistante |
-| Stop observé | 3 % par position ; sortie limitée au prochain contrôle |
+| Stop observé | 3 % par position ; watchdog nominal toutes les 15 min, soumis aux retards GitHub |
 | Durée cible maximale | 18 barres horaires retenues, environ 3 séances |
 | Ordres | un par cycle ; 6 entrées/sorties ordinaires au plus par jour ; sorties prioritaires autorisées au-delà |
 
@@ -83,6 +83,13 @@ Même après validation, `canary-policy.json`, `CANARY_KILL_SWITCH` et
 `CANARY_SCHEDULE_ENABLED` restent trois verrous indépendants. La politique est
 désactivée par défaut.
 
+Une mise à niveau du moteur sur un compte canari déjà utilisé passe par la
+commande exceptionnelle `canary-migrate`. Elle n'accepte que l'empreinte
+prédécesseur explicitement revue dans le code, relance les tests, utilise un
+client Alpaca en lecture seule et exige l'égalité exacte entre compte, position,
+trésorerie, état durable et compte shadow distinct. Elle ne remet pas à zéro le
+compte et ne peut pas autoriser une migration générique.
+
 Tous les jobs, y compris la V1, sont bloqués tant que la gratuité n'est pas
 attestée. Le connecteur GitHub ne permet pas de vérifier/modifier la facturation
 ni de lire les valeurs des secrets. Aucun service supplémentaire n'est provisionné.
@@ -144,11 +151,20 @@ L'exécuteur ne possède pas d'API d'annulation ni de liquidation forcée.
 - Le canari utilise `trend_6_24` comme générateur déterministe d'ordres fictifs
   sur le second compte. Il mesure uniquement la plomberie d'exécution.
 
-Le planning couvre 15:07 à 21:07 UTC en semaine afin d'observer les six barres
-utiles aussi bien en EDT qu'en EST. Le créneau de bord supplémentaire attend la
-première barre complète ou constate la fermeture sans prendre de décision. Le calendrier Alpaca filtre les fermetures.
-GitHub Actions n'offre aucune garantie de ponctualité. Les ordres paper sont des
-limites DAY, pouvant rester non exécutées ; les backtests à l'open sont un modèle
+Le cycle de stratégie est demandé à `:23` chaque heure de séance, dans le fuseau
+`America/New_York`, afin d'éviter les conversions DST et le pic de charge GitHub
+du début d'heure. Un workflow séparé contrôle les positions à `:13`, `:28`, `:43`
+et `:58` sans attendre une nouvelle barre : il peut demander une sortie de risque
+sur le prix courant, mais ne crée jamais une entrée. Les deux workflows partagent
+la même concurrence et le même état durable pour empêcher des écritures simultanées.
+Le calendrier Alpaca filtre les fermetures.
+
+GitHub Actions n'offre toujours aucune garantie de ponctualité : sa documentation
+précise que les jobs planifiés peuvent être retardés ou abandonnés. Le watchdog
+réduit cette fenêtre, il ne constitue donc pas un stop garanti. Alpaca ne permet
+les stops fractionnés qu'en `DAY`; un stop permanent `GTC` ne peut pas protéger
+proprement les tailles fractionnées de ce compte de 2 000 USD. Les sorties restent
+des limites DAY pouvant ne pas être exécutées ; les backtests à l'open sont un modèle
 de recherche, pas une reproduction de ces limites ni du retard de quelques minutes.
 Une phase shadow et une observation des remplissages restent indispensables.
 
@@ -189,7 +205,9 @@ python -m bot paper
 # Second compte Paper uniquement, verrouillé par défaut :
 python -m bot canary-probe --state-dir runtime-canary
 python -m bot canary-validate --state-dir runtime-canary --main-state-dir runtime
+python -m bot canary-migrate --state-dir runtime-canary --main-state-dir runtime
 python -m bot canary-paper --state-dir runtime-canary
+python -m bot canary-risk --state-dir runtime-canary
 # Rejouer exactement une entrée sauvegardée, sans réseau ni clés :
 python -m bot research --input runtime/research-input.json --state-dir results/replay
 ```

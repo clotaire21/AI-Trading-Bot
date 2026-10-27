@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 import tempfile
 import unittest
@@ -7,7 +8,9 @@ from unittest.mock import Mock, patch
 
 from bot.alpaca import ExecutionPaper, ReadOnlyPaper, SafetyError
 from bot.audit import evaluate, run_locked_audit
-from bot.canary import canary_cycle, canary_gate, validate_canary
+from bot.canary import (CANARY_UPGRADE_PREDECESSORS, canary_cycle, canary_gate,
+                        migrate_canary, validate_canary)
+from bot.runner import account_hash
 from bot.state import atomic_json, code_hash, load
 from helpers import account, frames, raw_bars
 
@@ -78,6 +81,38 @@ class CanaryTests(unittest.TestCase):
     def test_canary_execution_rejects_read_only_client(self):
         with self.assertRaisesRegex(SafetyError, "PAPER execution"):
             canary_cycle(Mock(spec=ReadOnlyPaper), "unused", {})
+
+    def test_used_canary_migrates_only_from_reviewed_reconciled_predecessor(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root)
+            main, canary = root / "runtime", root / "canary"
+            client, account_data = self.client()
+            account_data.update(cash="1600", equity="2000")
+            position = dict(symbol="IWM", side="long", qty="1.4", market_value="400",
+                            avg_entry_price="285", current_price=str(400 / 1.4))
+            client.positions.return_value = [position]
+            identity = account_hash(account_data)
+            main_hash = "a" * 64
+            predecessor = next(iter(CANARY_UPGRADE_PREDECESSORS))
+            atomic_json(main / "connection.json", {"account_hash": main_hash})
+            atomic_json(canary / "state.json", {
+                "account_hash": identity, "tracked_quantities": {"IWM": "1.4"},
+                "tracked_cash": 1600, "pending": None,
+            })
+            atomic_json(canary / "canary-validation.json", {
+                "schema": 1, "at": datetime.now(timezone.utc).isoformat(),
+                "code_sha256": predecessor, "safety_tests_passed": True,
+                "connection_passed": True, "account_hash": identity,
+                "main_account_hash": main_hash, "mode": "operational_canary_only",
+                "strategy": "trend_6_24", "performance_evidence": False,
+            })
+            migrated = migrate_canary(client, canary, main)
+            self.assertEqual(migrated["code_sha256"], code_hash())
+            self.assertEqual(migrated["migrated_from"], predecessor)
+            migrated["code_sha256"] = "b" * 64
+            atomic_json(canary / "canary-validation.json", migrated)
+            with self.assertRaisesRegex(SafetyError, "predecessor mismatch"):
+                migrate_canary(client, canary, main)
 
 
 if __name__ == "__main__":

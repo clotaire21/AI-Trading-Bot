@@ -7,7 +7,7 @@ import subprocess
 import sys
 from .alpaca import ReadOnlyPaper, ExecutionPaper, SafetyError
 from .audit import run_locked_audit
-from .canary import canary_cycle, renew_canary, validate_canary
+from .canary import canary_cycle, migrate_canary, renew_canary, validate_canary
 from .data import frames_from_bars, align_research
 from .research import compare, write_report
 from .runner import probe, cycle
@@ -20,7 +20,7 @@ def main():
     parser = argparse.ArgumentParser(description="Paper-only research lab; orders disabled by default")
     parser.add_argument("command", choices=(
         "probe", "research", "audit", "validate", "renew", "selfcheck", "shadow", "paper",
-        "canary-probe", "canary-validate", "canary-paper",
+        "canary-probe", "canary-validate", "canary-migrate", "canary-paper", "canary-risk",
     ))
     parser.add_argument("--state-dir", default="runtime")
     parser.add_argument("--input", help="Replay a saved Alpaca bar JSON for offline research")
@@ -83,11 +83,16 @@ def main():
             subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], check=True)
             proof = validate_canary(ReadOnlyPaper(), directory, args.main_state_dir)
             print(json.dumps(proof, indent=2))
-        elif args.command == "canary-paper":
+        elif args.command == "canary-migrate":
+            subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], check=True)
+            proof = migrate_canary(ReadOnlyPaper(), directory, args.main_state_dir)
+            print(json.dumps(proof, indent=2))
+        elif args.command in ("canary-paper", "canary-risk"):
             client = ExecutionPaper()
-            if (directory / "state.json").exists():
+            if args.command == "canary-paper" and (directory / "state.json").exists():
                 renew_canary(client, directory)
-            canary_cycle(client, directory, load("canary-policy.json"))
+            canary_cycle(client, directory, load("canary-policy.json"),
+                         risk_only=args.command == "canary-risk")
         else:
             execute = args.command == "paper"
             policy = load("execution-policy.json")

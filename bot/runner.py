@@ -64,7 +64,7 @@ def execution_gate(directory, policy, account):
         raise SafetyError("Research gate failed")
 
 
-def cycle(client, directory, policy, execute=False, gate=execution_gate):
+def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_only=False):
     directory = Path(directory)
     account, clock = client.account(), client.clock()
     positions, open_orders = client.positions(), client.orders()
@@ -144,6 +144,43 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate):
     state["max_drawdown"] = min(state.get("max_drawdown", 0), risk_equity / state["peak"] - 1)
     # Persist observed loss suspensions even if the data request later fails.
     atomic_json(state_path, state)
+    if risk_only:
+        by_symbol = {p["symbol"]: p for p in positions}
+        budget_equity = min(LIMITS.capital, risk_equity)
+        portfolio_over = gross > budget_equity * LIMITS.exposure + 1
+        candidates, checks = [], []
+        for symbol in SYMBOLS:
+            position = by_symbol.get(symbol)
+            if not position:
+                continue
+            current = number(position["current_price"])
+            stop = current <= number(position["avg_entry_price"]) * (1 - LIMITS.stop_loss)
+            over = portfolio_over or number(position["market_value"]) > budget_equity * LIMITS.position + 1
+            exit_required = state["halted"] or state["daily_halt"] or stop or over
+            checks.append({"symbol": symbol, "current_price": current,
+                           "stop": stop, "position_cap": over,
+                           "exit_required": exit_required})
+            if exit_required:
+                # The timestamp makes each watchdog attempt idempotent while
+                # allowing a later slot to retry a terminal unfilled order.
+                risk_slot = "risk-" + clock_time.replace(second=0, microsecond=0).isoformat()
+                candidates.append(make_order(symbol, "sell", current, position["qty"],
+                                             risk_slot, state["account_hash"], policy["strategy"]))
+        append_event(directory, {"event": "risk_watch", "equity": equity,
+                                 "checks": checks, "exit_candidates": len(candidates)})
+        if execute and candidates:
+            order = candidates[0]
+            intent = {"symbol": order.symbol, "side": order.side, "qty": str(order.qty),
+                      "limit_price": str(order.limit_price), "client_id": order.client_id,
+                      "bar": "risk-watch"}
+            state["pending"] = intent
+            state["orders_today"] += 1
+            append_event(directory, {"event": "order_intent", "source": "risk_watch", **intent})
+            atomic_json(state_path, state)
+            response = client.submit(order)
+            append_event(directory, {"event": "order_ack", "client_id": order.client_id,
+                                      "status": response["status"]})
+        return
     bars = align(frames_from_bars(client.bars((wall - timedelta(days=20)).isoformat(),
                                              (wall - timedelta(minutes=2)).isoformat())))
     # Alpaca end is inclusive on bar start. Remove all incomplete clock hours.

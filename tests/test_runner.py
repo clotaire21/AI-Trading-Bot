@@ -168,5 +168,42 @@ class RunnerTests(unittest.TestCase):
         self.assertTrue(load(self.directory / "state.json")["halted"])
         self.client.submit.assert_not_called()
 
+    def risk_state(self, current_price):
+        market_value = 4 * current_price
+        self.a.update(cash="1600", equity=str(1600 + market_value))
+        self.client.positions.return_value = [dict(
+            symbol="SPY", side="long", qty="4", market_value=str(market_value),
+            avg_entry_price="100", current_price=str(current_price))]
+        atomic_json(self.directory / "state.json", {
+            "account_hash": account_hash(self.a), "peak": 2000, "day": "2023-01-12",
+            "day_start": 2000, "daily_halt": False, "halted": False,
+            "orders_today": 1, "entries": {"SPY": "2023-01-12 16:00:00+00:00"},
+            "last_bar": "2023-01-12 16:00:00+00:00", "pending": None,
+            "benchmark_start": 100, "initial_equity": 2000, "modeled_cost": 0,
+            "tracked_quantities": {"SPY": "4"}, "tracked_cash": 1600,
+            "last_equity": 2000, "max_drawdown": 0,
+        })
+
+    def test_risk_watch_exits_without_waiting_for_a_new_bar(self):
+        self.risk_state(95)
+        self.client.bars.side_effect = AssertionError("risk watch must not fetch bars")
+        cycle(self.client, self.directory, self.policy, True, risk_only=True)
+        submitted = self.client.submit.call_args.args[0]
+        self.assertEqual((submitted.symbol, submitted.side, str(submitted.qty)),
+                         ("SPY", "sell", "4.000000000"))
+        self.client.bars.assert_not_called()
+        state = load(self.directory / "state.json")
+        self.assertEqual(state["pending"]["side"], "sell")
+        self.assertIn('"event": "risk_watch"',
+                      (self.directory / "journal.jsonl").read_text())
+
+    def test_risk_watch_holds_healthy_position_without_market_data(self):
+        self.risk_state(99)
+        self.client.bars.side_effect = AssertionError("risk watch must not fetch bars")
+        cycle(self.client, self.directory, self.policy, True, risk_only=True)
+        self.client.submit.assert_not_called()
+        self.client.bars.assert_not_called()
+        self.assertIsNone(load(self.directory / "state.json")["pending"])
+
 
 if __name__ == "__main__": unittest.main()
