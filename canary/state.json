@@ -7,24 +7,19 @@
   "halted": false,
   "orders_today": 1,
   "entries": {
-    "IWM": "2026-10-26 17:00:00+00:00"
+    "IWM": "2026-10-26 17:00:00+00:00",
+    "SPY": "2026-10-27 15:00:00+00:00"
   },
   "last_bar": "2026-10-27 15:00:00+00:00",
-  "pending": {
-    "symbol": "SPY",
-    "side": "buy",
-    "qty": "0.513352",
-    "limit_price": "771.40",
-    "client_id": "lab-653a72d66f2755153805d7105f1a8869",
-    "bar": "2026-10-27 15:00:00+00:00"
-  },
+  "pending": null,
   "benchmark_start": 765.95,
   "initial_equity": 2000.0,
-  "modeled_cost": 0.3953585572500001,
+  "modeled_cost": 0.790595448978,
   "tracked_quantities": {
-    "IWM": "1.425075"
+    "IWM": "1.425075",
+    "SPY": "0.513352"
   },
-  "tracked_cash": 1604.64144275,
+  "tracked_cash": 1209.4045510219999,
   "last_equity": 2003.12464144275,
   "max_drawdown": -0.00021767927862492709
 }
