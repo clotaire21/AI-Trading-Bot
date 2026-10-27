@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
+from copy import deepcopy
 import os
 from pathlib import Path
 import re
@@ -13,7 +14,7 @@ from .alpaca import ExecutionPaper, ReadOnlyPaper, SafetyError
 from .config import SYMBOLS
 from .risk import account_values, number
 from .runner import account_hash, cycle, probe
-from .state import atomic_json, code_hash, load, now
+from .state import append_event, atomic_json, code_hash, load, now
 
 
 PROOF_FILE = "canary-validation.json"
@@ -90,6 +91,8 @@ def migrate_canary(client, directory, main_directory):
     cash, _, _ = account_values(account, positions)
     identity = account_hash(account)
     previous = proof.get("code_sha256")
+    state = deepcopy(state)
+    reconciled = None
     try:
         age = datetime.now(timezone.utc) - datetime.fromisoformat(proof["at"])
         observed = {p["symbol"]: Decimal(str(p["qty"])) for p in positions}
@@ -98,6 +101,52 @@ def migrate_canary(client, directory, main_directory):
         tracked_cash = number(state["tracked_cash"])
     except (KeyError, TypeError, ValueError):
         raise SafetyError("Invalid canary migration evidence") from None
+    pending = state.get("pending")
+    if pending is not None:
+        matching = [order for order in client.orders("all")
+                    if order.get("client_order_id") == pending.get("client_id")]
+        if len(matching) != 1 or matching[0].get("status") not in (
+                "filled", "canceled", "expired", "rejected"):
+            raise SafetyError("Canary migration pending order is not terminal")
+        order = matching[0]
+        try:
+            filled = Decimal(str(order.get("filled_qty", 0)))
+            intended = Decimal(str(pending["qty"]))
+            symbol, side = pending["symbol"], pending["side"]
+            limit_price, entry_bar = pending["limit_price"], pending["bar"]
+            client_id = pending["client_id"]
+        except (KeyError, TypeError, ValueError, InvalidOperation):
+            raise SafetyError("Invalid canary migration pending order") from None
+        if (not filled.is_finite() or not intended.is_finite() or
+                not Decimal(0) <= filled <= intended or
+                order.get("symbol") != symbol or order.get("side") != side):
+            raise SafetyError("Invalid canary migration pending order")
+        expected = tracked.copy()
+        expected[symbol] = expected.get(symbol, Decimal(0)) + filled * (
+            1 if side == "buy" else -1)
+        expected = {key: value for key, value in expected.items() if value != 0}
+        if expected != observed:
+            raise SafetyError("Canary migration fill does not explain positions")
+        if filled > 0:
+            average = number(order.get("filled_avg_price"))
+            limit = number(limit_price)
+            if (average <= 0 or
+                    (side == "buy" and average > limit + .000001) or
+                    (side == "sell" and average < limit - .000001)):
+                raise SafetyError("Canary migration fill violates order limit")
+            notional = float(filled) * average
+            state["modeled_cost"] = number(state.get("modeled_cost", 0)) + notional * .001
+            state["tracked_cash"] = tracked_cash + notional * (
+                -1 if side == "buy" else 1)
+            if side == "buy":
+                state.setdefault("entries", {})[symbol] = entry_bar
+        state["tracked_quantities"] = {p["symbol"]: p["qty"] for p in positions}
+        state["pending"] = None
+        tracked, tracked_cash = observed, number(state["tracked_cash"])
+        reconciled = {"event": "order_reconciled", "source": "canary_migration",
+                      "client_id": client_id, "status": order["status"],
+                      "filled_qty": float(filled),
+                      "filled_avg_price": order.get("filled_avg_price")}
     if (previous not in CANARY_UPGRADE_PREDECESSORS or previous == code_hash() or
             not timedelta(0) <= age <= timedelta(days=7) or
             not proof.get("safety_tests_passed") or not proof.get("connection_passed") or
@@ -119,6 +168,9 @@ def migrate_canary(client, directory, main_directory):
             raise SafetyError("Canary asset eligibility changed")
     proof.update(schema=2, at=now(), code_sha256=code_hash(), migrated_from=previous,
                  renewal="reviewed_code_upgrade_same_account_reconciled_read_only")
+    if reconciled:
+        atomic_json(directory / "state.json", state)
+        append_event(directory, reconciled)
     atomic_json(directory / PROOF_FILE, proof)
     return proof
 
