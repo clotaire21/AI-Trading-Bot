@@ -1,6 +1,6 @@
 {
   "schema": 2,
-  "at": "2026-10-27T18:08:12.092371+00:00",
+  "at": "2026-10-27T18:10:10.280172+00:00",
   "initial_validated_at": "2026-10-26T11:10:12.412369+00:00",
   "code_sha256": "b7054287c2e3e95fc203cca0adefbda0f2c7c50f93ece7c7632c693afdcf9a64",
   "safety_tests_passed": true,
@@ -10,6 +10,6 @@
   "mode": "operational_canary_only",
   "strategy": "trend_6_24",
   "performance_evidence": false,
-  "renewal": "reviewed_code_upgrade_same_account_reconciled_read_only",
+  "renewal": "same_code_same_second_account_fresh_tests_read_only",
   "migrated_from": "31e357916a0bbb7df545fc07ff8296952474e5ba5c981ee5d8d17288f7440504"
 }

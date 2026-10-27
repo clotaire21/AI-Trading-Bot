@@ -1,42 +1,42 @@
 {
   "event": "decision",
-  "bar": "2026-10-27 15:00:00+00:00",
+  "bar": "2026-10-27 17:00:00+00:00",
   "strategy": "trend_6_24",
-  "equity_usd": 2003.52,
-  "net_modeled_equity_usd": 2003.12464144275,
-  "return_pct": 0.17599999999999838,
-  "net_return_pct": 0.15623207213750767,
-  "spy_return_pct": 0.6103531562112297,
-  "max_drawdown_pct": -0.02176792786249271,
-  "benchmark_timestamp": "2026-10-27 15:00:00+00:00",
-  "account_timestamp": "2026-10-27T12:37:38.645982142-04:00",
-  "spy_price_benchmark_usd": 2012.2070631242248,
-  "cash_usd": 1604.63,
+  "equity_usd": 2003.19,
+  "net_modeled_equity_usd": 2002.3994045510221,
+  "return_pct": 0.1595000000000013,
+  "net_return_pct": 0.11997022755110276,
+  "spy_return_pct": 0.47261570598602365,
+  "max_drawdown_pct": -0.03620528032671766,
+  "benchmark_timestamp": "2026-10-27 17:00:00+00:00",
+  "account_timestamp": "2026-10-27T14:10:10.325048721-04:00",
+  "spy_price_benchmark_usd": 2009.4523141197205,
+  "cash_usd": 1209.39,
   "halted": false,
   "daily_halt": false,
   "execute": true,
-  "code_sha256": "31e357916a0bbb7df545fc07ff8296952474e5ba5c981ee5d8d17288f7440504",
+  "code_sha256": "b7054287c2e3e95fc203cca0adefbda0f2c7c50f93ece7c7632c693afdcf9a64",
   "decisions": [
     {
       "symbol": "SPY",
-      "reason": "entry",
+      "reason": "hold",
       "enter": true,
       "exit": false,
-      "reference_price": 770.625
+      "reference_price": 769.57
     },
     {
       "symbol": "QQQ",
       "reason": "entry",
       "enter": true,
       "exit": false,
-      "reference_price": 721.975
+      "reference_price": 720.55
     },
     {
       "symbol": "IWM",
       "reason": "hold",
       "enter": true,
       "exit": false,
-      "reference_price": 279.89
+      "reference_price": 279.65
     }
   ]
 }
