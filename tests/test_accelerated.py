@@ -114,6 +114,50 @@ class CanaryTests(unittest.TestCase):
             with self.assertRaisesRegex(SafetyError, "predecessor mismatch"):
                 migrate_canary(client, canary, main)
 
+    def test_canary_migration_reconciles_terminal_pending_fill(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root)
+            main, canary = root / "runtime", root / "canary"
+            client, account_data = self.client()
+            account_data.update(cash="1500", equity="2000")
+            client.positions.return_value = [
+                dict(symbol="IWM", side="long", qty="1.4", market_value="400",
+                     avg_entry_price="285", current_price=str(400 / 1.4)),
+                dict(symbol="SPY", side="long", qty="1", market_value="100",
+                     avg_entry_price="100", current_price="100"),
+            ]
+            pending = {"symbol": "SPY", "side": "buy", "qty": "1",
+                       "limit_price": "101", "client_id": "lab-" + "1" * 32,
+                       "bar": "2026-10-27 15:00:00+00:00"}
+            filled = {"symbol": "SPY", "side": "buy", "status": "filled",
+                      "client_order_id": pending["client_id"], "filled_qty": "1",
+                      "filled_avg_price": "100"}
+            client.orders.side_effect = lambda status="open": [] if status == "open" else [filled]
+            identity = account_hash(account_data)
+            main_hash = "a" * 64
+            predecessor = next(iter(CANARY_UPGRADE_PREDECESSORS))
+            atomic_json(main / "connection.json", {"account_hash": main_hash})
+            atomic_json(canary / "state.json", {
+                "account_hash": identity, "tracked_quantities": {"IWM": "1.4"},
+                "tracked_cash": 1600, "pending": pending, "modeled_cost": 0,
+                "entries": {"IWM": "2026-10-26 17:00:00+00:00"},
+            })
+            atomic_json(canary / "canary-validation.json", {
+                "schema": 1, "at": datetime.now(timezone.utc).isoformat(),
+                "code_sha256": predecessor, "safety_tests_passed": True,
+                "connection_passed": True, "account_hash": identity,
+                "main_account_hash": main_hash, "mode": "operational_canary_only",
+                "strategy": "trend_6_24", "performance_evidence": False,
+            })
+            migrate_canary(client, canary, main)
+            state = load(canary / "state.json")
+            self.assertIsNone(state["pending"])
+            self.assertEqual(state["tracked_quantities"], {"IWM": "1.4", "SPY": "1"})
+            self.assertEqual(state["tracked_cash"], 1500)
+            self.assertEqual(state["entries"]["SPY"], pending["bar"])
+            self.assertAlmostEqual(state["modeled_cost"], .1)
+            self.assertIn("canary_migration", (canary / "journal.jsonl").read_text())
+
 
 if __name__ == "__main__":
     unittest.main()
