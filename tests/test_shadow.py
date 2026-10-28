@@ -1,14 +1,16 @@
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+import hashlib
 import numpy as np
 
-from bot.alpaca import ExecutionPaper, SafetyError
-from bot.shadow import advance, shadow_cycle
-from bot.state import load
+from bot.alpaca import ExecutionPaper, ReadOnlyPaper, SafetyError
+from bot.shadow import (SHADOW_MIGRATION_PREDECESSORS, advance,
+                        migrate_shadow, shadow_cycle)
+from bot.state import atomic_json, code_hash, load
 from bot.strategies import SHADOW_STRATEGIES, STRATEGIES
-from helpers import frames
+from helpers import account, frames
 
 
 class ShadowTests(unittest.TestCase):
@@ -29,8 +31,9 @@ class ShadowTests(unittest.TestCase):
 
     def test_starts_forward_only_then_fills_next_unseen_bar(self):
         first = advance(self.slice(-1), self.directory, "account")
-        self.assertEqual(first["schema"], 2)
+        self.assertEqual(first["schema"], 3)
         self.assertIn("rsi25_trend", first["strategies"])
+        self.assertIn("trend_pullback_rsi_stoch", first["strategies"])
         self.assertTrue(all(item["fills"] == 0 for item in first["strategies"].values()))
         self.assertTrue(all(not item["forward_gate_passed"]
                             for item in first["strategies"].values()))
@@ -56,7 +59,6 @@ class ShadowTests(unittest.TestCase):
             advance(self.data, self.directory, "other")
         state = load(self.directory / "shadow-state.json")
         state["strategies"].pop("trend_24_72")
-        from bot.state import atomic_json
         atomic_json(self.directory / "shadow-state.json", state)
         with self.assertRaisesRegex(SafetyError, "strategy set"):
             advance(self.data, self.directory, "account")
@@ -66,10 +68,43 @@ class ShadowTests(unittest.TestCase):
         with self.assertRaisesRegex(SafetyError, "read-only"):
             shadow_cycle(client, self.directory)
         client.account.assert_not_called()
+        with self.assertRaisesRegex(SafetyError, "read-only"):
+            migrate_shadow(client, self.directory)
 
     def test_rsi_candidate_is_shadow_only_and_cannot_be_executed(self):
         self.assertIn("rsi25_trend", SHADOW_STRATEGIES)
         self.assertNotIn("rsi25_trend", STRATEGIES)
+        self.assertIn("trend_pullback_rsi_stoch", SHADOW_STRATEGIES)
+        self.assertNotIn("trend_pullback_rsi_stoch", STRATEGIES)
+
+    def test_reviewed_shadow_migration_preserves_old_evidence_and_starts_v2_now(self):
+        identity = hashlib.sha256(account()["id"].encode()).hexdigest()
+        advance(self.data, self.directory, identity)
+        state = load(self.directory / "shadow-state.json")
+        state["schema"] = 2
+        state["code_sha256"] = next(iter(SHADOW_MIGRATION_PREDECESSORS))
+        state["spy_start"] = state["strategies"]["trend_6_24"]["spy_start"]
+        state["strategies"].pop("trend_pullback_rsi_stoch")
+        for portfolio in state["strategies"].values():
+            portfolio.pop("spy_start")
+        pending = state["strategies"]["trend_6_24"]["pending"]
+        self.assertIsNotNone(pending)
+        atomic_json(self.directory / "shadow-state.json", state)
+        with patch.dict("os.environ", {"ALPACA_API_KEY": "x", "ALPACA_SECRET_KEY": "y"}), \
+                patch("bot.shadow._shadow_inputs", return_value=(account(), self.data)):
+            report = migrate_shadow(ReadOnlyPaper(), self.directory)
+        migrated = load(self.directory / "shadow-state.json")
+        self.assertEqual(migrated["schema"], 3)
+        self.assertEqual(migrated["code_sha256"], code_hash())
+        self.assertNotIn("spy_start", migrated)
+        self.assertIsNone(migrated["strategies"]["trend_6_24"]["pending"])
+        v2 = migrated["strategies"]["trend_pullback_rsi_stoch"]
+        self.assertEqual(v2["started_at"], str(self.data["SPY"].index[-1]))
+        self.assertEqual(v2["fills"], 0)
+        self.assertIn("spy_60pct_return_pct", report["strategies"]["trend_6_24"])
+        journal = (self.directory / "journal.jsonl").read_text()
+        self.assertIn("shadow_migration", journal)
+        self.assertIn(pending["symbol"], journal)
 
 
 if __name__ == "__main__":

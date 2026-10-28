@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import hashlib
+import math
 import pandas as pd
 
 from .alpaca import ReadOnlyPaper, SafetyError
@@ -22,7 +23,10 @@ from .strategies import SHADOW_STRATEGIES, SHADOW_WARMUP, signals
 
 STATE_FILE = "shadow-state.json"
 REPORT_FILE = "shadow-performance.json"
-SHADOW_SCHEMA = 2
+SHADOW_SCHEMA = 3
+SHADOW_MIGRATION_PREDECESSORS = frozenset({
+    "31e357916a0bbb7df545fc07ff8296952474e5ba5c981ee5d8d17288f7440504",
+})
 
 
 def _account_hash(account):
@@ -36,9 +40,10 @@ def _value(portfolio, frames, i, field):
     )
 
 
-def _new_portfolio(timestamp):
+def _new_portfolio(timestamp, spy_start):
     return {
         "started_at": str(timestamp), "cash": LIMITS.capital, "equity": LIMITS.capital,
+        "spy_start": float(spy_start),
         "positions": {}, "pending": None, "peak": LIMITS.capital,
         "max_drawdown": 0.0, "day": None, "day_start": LIMITS.capital,
         "daily_halt": False, "halted": False, "orders_today": 0,
@@ -167,13 +172,12 @@ def _report(state, frames):
     latest = pd.Timestamp(state["last_bar"])
     i = index.get_loc(latest)
     current_spy = float(frames["SPY"].Close.iloc[i])
-    start_spy = state["spy_start"]
     friction = (LIMITS.fee_bps + LIMITS.slippage_bps) / 10000
-    units = LIMITS.capital * LIMITS.exposure / (start_spy * (1 + friction))
-    spy_value = LIMITS.capital * LIMITS.reserve + units * current_spy
     strategies = {}
     for name in SHADOW_STRATEGIES:
         portfolio = state["strategies"][name]
+        units = LIMITS.capital * LIMITS.exposure / (portfolio["spy_start"] * (1 + friction))
+        spy_value = LIMITS.capital * LIMITS.reserve + units * current_spy
         return_pct = (portfolio["equity"] / LIMITS.capital - 1) * 100
         drawdown_pct = portfolio["max_drawdown"] * 100
         excess_pct = return_pct - (spy_value / LIMITS.capital - 1) * 100
@@ -188,6 +192,8 @@ def _report(state, frames):
             "started_at": portfolio["started_at"],
             "equity_usd": portfolio["equity"],
             "return_pct": return_pct, "excess_vs_spy_pct": excess_pct,
+            "spy_60pct_value_usd": spy_value,
+            "spy_60pct_return_pct": (spy_value / LIMITS.capital - 1) * 100,
             "max_drawdown_pct": drawdown_pct, "sessions": portfolio["sessions"],
             "modeled_cost_usd": portfolio["modeled_cost"],
             "fills": portfolio["fills"], "round_trips": portfolio["round_trips"],
@@ -202,8 +208,6 @@ def _report(state, frames):
         "schema": SHADOW_SCHEMA, "mode": "forward_shadow_no_orders", "bar": str(latest),
         "code_sha256": state["code_sha256"],
         "capital_per_strategy_usd": LIMITS.capital,
-        "spy_60pct_value_usd": spy_value,
-        "spy_60pct_return_pct": (spy_value / LIMITS.capital - 1) * 100,
         "strategies": strategies, "leaderboard": leaderboard,
         "warning": "Modeled portfolios only; forward gate is diagnostic and cannot authorize Alpaca orders.",
     }
@@ -236,8 +240,9 @@ def advance(frames, directory, account_hash):
         state = {
             "schema": SHADOW_SCHEMA, "created_at": now(), "account_hash": account_hash,
             "code_sha256": code_hash(),
-            "last_bar": None, "spy_start": float(frames["SPY"].Close.iloc[-1]),
-            "strategies": {name: _new_portfolio(latest) for name in SHADOW_STRATEGIES},
+            "last_bar": None,
+            "strategies": {name: _new_portfolio(
+                latest, frames["SPY"].Close.iloc[-1]) for name in SHADOW_STRATEGIES},
         }
         unseen = (len(index) - 1,)
     indices = list(unseen)
@@ -262,10 +267,7 @@ def advance(frames, directory, account_hash):
     return report
 
 
-def shadow_cycle(client, directory):
-    """Read the flat paper account and advance models without any write API."""
-    if type(client) is not ReadOnlyPaper:
-        raise SafetyError("Shadow requires the read-only broker client")
+def _shadow_inputs(client):
     account, positions, orders, clock = client.account(), client.positions(), client.orders(), client.clock()
     cash, equity, _ = account_values(account, positions)
     if positions or orders or abs(cash - LIMITS.capital) >= .01 or abs(equity - LIMITS.capital) >= .01:
@@ -280,4 +282,64 @@ def shadow_cycle(client, directory):
     frames = {symbol: frame[frame.index + pd.Timedelta(hours=1) <= pd.Timestamp(wall - timedelta(minutes=2))]
               for symbol, frame in frames.items()}
     align(frames)
+    return account, frames
+
+
+def migrate_shadow(client, directory):
+    """Advance a reviewed schema-2 state to V2 without inventing observations."""
+    if type(client) is not ReadOnlyPaper:
+        raise SafetyError("Shadow migration requires the read-only broker client")
+    directory = Path(directory)
+    account, frames = _shadow_inputs(client)
+    state = load(directory / STATE_FILE)
+    previous = state.get("code_sha256")
+    old_names = set(SHADOW_STRATEGIES) - {"trend_pullback_rsi_stoch"}
+    if (state.get("schema") != 2 or previous not in SHADOW_MIGRATION_PREDECESSORS or
+            state.get("account_hash") != _account_hash(account) or
+            set(state.get("strategies", {})) != old_names):
+        raise SafetyError("Invalid shadow migration evidence")
+    latest = frames[SYMBOLS[0]].index[-1]
+    try:
+        last = pd.Timestamp(state["last_bar"])
+        old_spy_start = float(state["spy_start"])
+    except (KeyError, TypeError, ValueError):
+        raise SafetyError("Invalid shadow migration evidence") from None
+    if last > latest or not math.isfinite(old_spy_start) or old_spy_start <= 0:
+        raise SafetyError("Invalid shadow migration evidence")
+    skipped = []
+    for name, portfolio in state["strategies"].items():
+        if portfolio.get("pending"):
+            skipped.append({"strategy": name, "pending": portfolio["pending"]})
+        portfolio["pending"] = None
+        portfolio["spy_start"] = old_spy_start
+        try:
+            equity = _value(portfolio, frames, -1, "Close")
+        except (KeyError, TypeError, ValueError):
+            raise SafetyError("Invalid shadow migration portfolio") from None
+        if not math.isfinite(equity) or equity < 0:
+            raise SafetyError("Invalid shadow migration portfolio")
+        portfolio["equity"] = equity
+        portfolio["peak"] = max(float(portfolio["peak"]), equity)
+        portfolio["max_drawdown"] = min(
+            float(portfolio["max_drawdown"]), equity / portfolio["peak"] - 1)
+    state["strategies"]["trend_pullback_rsi_stoch"] = _new_portfolio(
+        latest, frames["SPY"].Close.iloc[-1])
+    state.update(schema=SHADOW_SCHEMA, code_sha256=code_hash(), last_bar=str(latest))
+    state.pop("spy_start", None)
+    report = _report(state, frames)
+    atomic_json(directory / STATE_FILE, state)
+    atomic_json(directory / REPORT_FILE, report)
+    append_event(directory, {
+        "event": "shadow_migration", "bar": str(latest),
+        "migrated_from": previous, "added": "trend_pullback_rsi_stoch",
+        "skipped_pending": skipped,
+    })
+    return report
+
+
+def shadow_cycle(client, directory):
+    """Read the flat paper account and advance models without any write API."""
+    if type(client) is not ReadOnlyPaper:
+        raise SafetyError("Shadow requires the read-only broker client")
+    account, frames = _shadow_inputs(client)
     return advance(frames, directory, _account_hash(account))

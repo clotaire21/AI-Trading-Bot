@@ -5,7 +5,7 @@ on:
       command:
         description: 'preflight reads only; validate includes research; paper remains policy-gated'
         type: choice
-        options: [preflight, research, audit, validate, shadow, paper, canary-preflight, canary-validate, canary-migrate, canary-paper]
+        options: [preflight, research, audit, validate, shadow, shadow-migrate, paper, canary-preflight, canary-validate, canary-migrate, canary-paper]
         default: preflight
   schedule:
     # GitHub documents that jobs near the start of an hour are more likely to
@@ -73,6 +73,7 @@ jobs:
               python -m bot validate --state-dir runtime-state/runtime
               ;;
             shadow) python -m bot shadow --state-dir runtime-state/runtime ;;
+            shadow-migrate) python -m bot shadow-migrate --state-dir runtime-state/runtime ;;
             paper)
               if [ -f runtime-state/runtime/state.json ]; then
                 python -m bot renew --state-dir runtime-state/runtime

@@ -28,14 +28,21 @@ retour à la moyenne avec z-score 20 barres. Aucun modèle payant ni appel à un
 L'ajout de ML nécessitera un gain hors échantillon après coûts ; il n'est pas
 nécessaire pour faire fonctionner ce laboratoire.
 
-Le mode `shadow` suit en parallèle six portefeuilles virtuels distincts de
+Le mode `shadow` suit en parallèle sept portefeuilles virtuels distincts de
 2 000 USD : les trois stratégies historiques et trois hypothèses pré-déclarées,
 un retour à la moyenne plus sélectif, une tendance 24/72 heures et un achat sur
 RSI(14) inférieur à 25 uniquement lorsque la tendance 24/72 reste positive. Ces
-hypothèses ne sont pas ajoutées rétroactivement au test final déjà lu : elles
+stratégies sont complétées par une V2 de swing qui exige une tendance 24/72
+positive et utilise conjointement RSI(14) et stochastique(14) uniquement pour
+détecter un repli. Les hypothèses ne sont pas ajoutées rétroactivement au test final déjà lu : elles
 commencent à zéro lors de leur première observation future. Les signaux,
 positions virtuelles, frais modélisés et performances sont conservés sans aucun
 ordre envoyé à Alpaca.
+
+`shadow-migrate` est la seule voie autorisée pour ajouter la V2 à l'état durable.
+Elle accepte uniquement l'empreinte explicitement revue, annule les intentions
+virtuelles devenues anciennes pendant l'interruption et démarre la V2 sur la
+dernière barre observée sans lui attribuer de performance rétroactive.
 
 Pour accélérer la validation sans diminuer les critères, deux voies sont ajoutées
 en parallèle. L'audit historique verrouillé teste une seule fois les six règles
@@ -182,7 +189,7 @@ La branche `bot-state`, créée au premier lancement autorisé, contient `runtim
 - `connection.json`, `validation.json`, `research.json`, `research.md` ;
 - `research-input.json`, manifeste des données, pour rejouer la recherche ;
 - `state.json`, `performance.json`, journal `journal.jsonl` avec chaîne de hachage.
-- `shadow-state.json` et `shadow-performance.json` pour les six portefeuilles
+- `shadow-state.json` et `shadow-performance.json` pour les sept portefeuilles
   virtuels prospectifs, sans mélange avec l'état d'exécution paper.
 - `accelerated-audit-*` pour le plan verrouillé, les données et le rapport uniques ;
 - `canary/` pour les preuves, décisions et positions du second compte Paper.
