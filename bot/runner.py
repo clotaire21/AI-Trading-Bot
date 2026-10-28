@@ -66,6 +66,9 @@ def execution_gate(directory, policy, account):
 
 def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_only=False):
     directory = Path(directory)
+    entries_enabled = policy.get("entries_enabled", True)
+    if not isinstance(entries_enabled, bool):
+        raise SafetyError("Invalid entry policy")
     account, clock = client.account(), client.clock()
     positions, open_orders = client.positions(), client.orders()
     cash, equity, gross = account_values(account, positions)
@@ -133,6 +136,17 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_on
         raise SafetyError("Unexplained cash change; suspend")
     if open_orders:
         raise SafetyError("Open orders exist; no additional exposure")
+    if entries_enabled and state.get("drain_complete") is True:
+        raise SafetyError("Drained account requires reviewed strategy activation")
+    state["entries_enabled"] = entries_enabled
+    if not entries_enabled and not positions:
+        if state.get("drain_complete") is not True:
+            state["drain_complete"] = True
+            append_event(directory, {"event": "drain_complete",
+                                     "strategy": policy.get("strategy")})
+        atomic_json(state_path, state)
+        return
+    state["drain_complete"] = False
     today = clock_time.astimezone(ZoneInfo("America/New_York")).date().isoformat()
     if today != state["day"]:
         state.update(day=today, day_start=state.get("last_equity", equity), daily_halt=False, orders_today=0)
@@ -228,8 +242,9 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_on
             else:
                 reason = "hold"
         elif bool(signal.enter):
-            reason = "entry_blocked"
-            if not (state["halted"] or state["daily_halt"]) and state["orders_today"] < LIMITS.max_orders_day:
+            reason = "entry_blocked" if entries_enabled else "entry_disabled"
+            if (entries_enabled and not (state["halted"] or state["daily_halt"]) and
+                    state["orders_today"] < LIMITS.max_orders_day):
                 # Reserve 1% extra against fees/rounding; never use buying_power.
                 budget = min(budget_equity * LIMITS.position, budget_equity * LIMITS.exposure - gross,
                              cash - budget_equity * LIMITS.reserve) * .99
@@ -244,6 +259,7 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_on
         state["benchmark_start"] = float(bars["SPY"].Close.iloc[-1])
     benchmark = LIMITS.capital * float(bars["SPY"].Close.iloc[-1]) / state["benchmark_start"]
     snapshot = {"event": "decision", "bar": bar, "strategy": strategy,
+        "entries_enabled": entries_enabled,
         "equity_usd": equity, "net_modeled_equity_usd": equity - state["modeled_cost"],
         "return_pct": (equity / LIMITS.capital - 1) * 100,
         "net_return_pct": (risk_equity / LIMITS.capital - 1) * 100,

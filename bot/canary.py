@@ -23,6 +23,7 @@ CANARY_STRATEGY = "trend_6_24"
 # canary position. A later code change must name its own reviewed predecessor.
 CANARY_UPGRADE_PREDECESSORS = frozenset({
     "31e357916a0bbb7df545fc07ff8296952474e5ba5c981ee5d8d17288f7440504",
+    "b7054287c2e3e95fc203cca0adefbda0f2c7c50f93ece7c7632c693afdcf9a64",
 })
 
 
@@ -180,6 +181,7 @@ def canary_gate(directory, policy, account):
         raise SafetyError("Canary kill switch is on (default)")
     if (policy.get("mode") != "operational_canary_only" or
             not policy.get("orders_enabled") or
+            not isinstance(policy.get("entries_enabled"), bool) or
             policy.get("strategy") != CANARY_STRATEGY):
         raise SafetyError("Canary order policy disabled")
     try:

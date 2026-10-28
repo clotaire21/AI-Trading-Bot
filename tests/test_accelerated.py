@@ -72,8 +72,12 @@ class CanaryTests(unittest.TestCase):
                     self.assertRaisesRegex(SafetyError, "policy disabled"):
                 canary_gate(canary, disabled, account_data)
             enabled = {**disabled, "orders_enabled": True}
+            enabled["entries_enabled"] = True
             with patch.dict(os.environ, {"CANARY_KILL_SWITCH": "false"}):
                 canary_gate(canary, enabled, account_data)
+            drain = {**enabled, "entries_enabled": False}
+            with patch.dict(os.environ, {"CANARY_KILL_SWITCH": "false"}):
+                canary_gate(canary, drain, account_data)
             atomic_json(main / "connection.json", {"account_hash": proof["account_hash"]})
             with self.assertRaisesRegex(SafetyError, "must differ"):
                 validate_canary(client, canary, main)
