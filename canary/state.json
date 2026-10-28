@@ -8,25 +8,20 @@
   "orders_today": 2,
   "entries": {
     "IWM": "2026-10-26 17:00:00+00:00",
-    "SPY": "2026-10-27 15:00:00+00:00"
+    "SPY": "2026-10-27 15:00:00+00:00",
+    "QQQ": "2026-10-27 17:00:00+00:00"
   },
   "last_bar": "2026-10-27 17:00:00+00:00",
-  "pending": {
-    "symbol": "QQQ",
-    "side": "buy",
-    "qty": "0.549023",
-    "limit_price": "721.28",
-    "client_id": "lab-1ad4da48c3711246e716145ecb97ef2b",
-    "bar": "2026-10-27 17:00:00+00:00"
-  },
+  "pending": null,
   "benchmark_start": 765.95,
   "initial_equity": 2000.0,
-  "modeled_cost": 0.790595448978,
+  "modeled_cost": 1.1861204025460002,
   "tracked_quantities": {
     "IWM": "1.425075",
+    "QQQ": "0.549023",
     "SPY": "0.513352"
   },
-  "tracked_cash": 1209.4045510219999,
+  "tracked_cash": 813.8795974539998,
   "last_equity": 2002.3994045510221,
   "max_drawdown": -0.0003620528032671766
 }
