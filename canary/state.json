@@ -11,7 +11,7 @@
     "SPY": "2026-10-27 15:00:00+00:00",
     "QQQ": "2026-10-27 17:00:00+00:00"
   },
-  "last_bar": "2026-10-28 16:00:00+00:00",
+  "last_bar": "2026-10-28 18:00:00+00:00",
   "pending": null,
   "benchmark_start": 765.95,
   "initial_equity": 2000.0,
@@ -22,7 +22,7 @@
     "SPY": "0.513352"
   },
   "tracked_cash": 813.8795974539998,
-  "last_equity": 2004.3938795974539,
+  "last_equity": 2004.563879597454,
   "max_drawdown": -0.000578393835139912,
   "entries_enabled": false,
   "drain_complete": false

@@ -1,17 +1,17 @@
 {
   "event": "decision",
-  "bar": "2026-10-28 16:00:00+00:00",
+  "bar": "2026-10-28 18:00:00+00:00",
   "strategy": "trend_6_24",
   "entries_enabled": false,
-  "equity_usd": 2006.74,
-  "net_modeled_equity_usd": 2005.553879597454,
-  "return_pct": 0.3370000000000095,
-  "net_return_pct": 0.2776939798726952,
-  "spy_return_pct": 0.7702852666623183,
-  "max_drawdown_pct": -0.03620528032671766,
-  "benchmark_timestamp": "2026-10-28 16:00:00+00:00",
-  "account_timestamp": "2026-10-28T13:05:03.692228156-04:00",
-  "spy_price_benchmark_usd": 2015.4057053332463,
+  "equity_usd": 2005.75,
+  "net_modeled_equity_usd": 2004.563879597454,
+  "return_pct": 0.2874999999999961,
+  "net_return_pct": 0.22819397987270396,
+  "spy_return_pct": 0.6906456034989183,
+  "max_drawdown_pct": -0.057839383513991205,
+  "benchmark_timestamp": "2026-10-28 18:00:00+00:00",
+  "account_timestamp": "2026-10-28T15:38:08.681279909-04:00",
+  "spy_price_benchmark_usd": 2013.8129120699784,
   "cash_usd": 813.86,
   "halted": false,
   "daily_halt": false,
@@ -23,21 +23,21 @@
       "reason": "hold",
       "enter": true,
       "exit": false,
-      "reference_price": 771.85
+      "reference_price": 771.24
     },
     {
       "symbol": "QQQ",
       "reason": "hold",
       "enter": true,
       "exit": false,
-      "reference_price": 723.17
+      "reference_price": 723.68
     },
     {
       "symbol": "IWM",
       "reason": "hold",
       "enter": true,
       "exit": false,
-      "reference_price": 280.44
+      "reference_price": 279.84
     }
   ]
 }
