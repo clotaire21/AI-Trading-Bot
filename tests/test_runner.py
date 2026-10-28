@@ -131,6 +131,48 @@ class RunnerTests(unittest.TestCase):
         self.assertFalse(self.client.submit.called)
         self.assertEqual(load(self.directory / "state.json")["orders_today"], 0)
 
+    def test_drain_mode_never_enters_and_stays_complete_when_flat(self):
+        drain = {**self.policy, "entries_enabled": False}
+        self.client.bars.side_effect = AssertionError("flat drain must not fetch bars")
+        cycle(self.client, self.directory, drain, True)
+        cycle(self.client, self.directory, drain, True)
+        self.client.submit.assert_not_called()
+        self.client.bars.assert_not_called()
+        state = load(self.directory / "state.json")
+        self.assertTrue(state["drain_complete"])
+        self.assertFalse(state["entries_enabled"])
+        journal = (self.directory / "journal.jsonl").read_text()
+        self.assertEqual(journal.count('"event": "drain_complete"'), 1)
+
+    def test_drain_mode_keeps_risk_exits_and_blocks_reactivation(self):
+        self.risk_state(95)
+        drain = {**self.policy, "entries_enabled": False}
+        cycle(self.client, self.directory, drain, True, risk_only=True)
+        submitted = self.client.submit.call_args.args[0]
+        self.assertEqual((submitted.symbol, submitted.side), ("SPY", "sell"))
+
+        state = load(self.directory / "state.json")
+        state.update(pending=None, tracked_quantities={}, tracked_cash=2000,
+                     drain_complete=True, entries_enabled=False)
+        atomic_json(self.directory / "state.json", state)
+        self.a.update(cash="2000", equity="2000")
+        self.client.positions.return_value = []
+        self.client.orders.return_value = []
+        with self.assertRaisesRegex(SafetyError, "reviewed strategy activation"):
+            cycle(self.client, self.directory, self.policy, True)
+
+    def test_drain_mode_with_position_blocks_other_signal_entries(self):
+        self.risk_state(99)
+        drain = {**self.policy, "entries_enabled": False}
+        cycle(self.client, self.directory, drain, True)
+        self.client.submit.assert_not_called()
+        report = load(self.directory / "performance.json")
+        self.assertFalse(report["entries_enabled"])
+        by_symbol = {item["symbol"]: item for item in report["decisions"]}
+        self.assertEqual(by_symbol["SPY"]["reason"], "hold")
+        self.assertEqual(by_symbol["QQQ"]["reason"], "entry_disabled")
+        self.assertEqual(by_symbol["IWM"]["reason"], "entry_disabled")
+
     def test_unexplained_cash_deposit_suspends(self):
         cycle(self.client, self.directory, self.policy, False)
         self.a.update(cash="2050", equity="2050")

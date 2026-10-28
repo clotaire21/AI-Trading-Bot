@@ -83,6 +83,13 @@ Même après validation, `canary-policy.json`, `CANARY_KILL_SWITCH` et
 `CANARY_SCHEDULE_ENABLED` restent trois verrous indépendants. La politique est
 désactivée par défaut.
 
+Le canari possède aussi un verrou d'entrée explicite `entries_enabled`. Le
+passer à `false` active un mode de vidange : aucun nouvel achat n'est créé, mais
+les sorties de signal, de durée, de stop et du watchdog restent autorisées. Une
+fois les ordres rapprochés et toutes les positions fermées, l'état durable écrit
+une seule fois `drain_complete` et reste à plat. Réactiver les entrées depuis cet
+état est refusé sans activation de stratégie explicitement revue.
+
 Une mise à niveau du moteur sur un compte canari déjà utilisé passe par la
 commande exceptionnelle `canary-migrate`. Elle n'accepte que l'empreinte
 prédécesseur explicitement revue dans le code, relance les tests, utilise un
