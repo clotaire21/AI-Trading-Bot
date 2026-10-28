@@ -1,22 +1,16 @@
 {
-  "schema": 2,
+  "schema": 3,
   "created_at": "2026-10-26T20:26:12.423045+00:00",
   "account_hash": "67b6b0fef12f5bdf131a206fcef3d65035e9dd24d3b053ef72a88823ffccd0b1",
-  "code_sha256": "31e357916a0bbb7df545fc07ff8296952474e5ba5c981ee5d8d17288f7440504",
-  "last_bar": "2026-10-26 19:00:00+00:00",
-  "spy_start": 765.225,
+  "code_sha256": "85e176052881d5cba7272c8fec25eadbd5e921509e7cc8c7bff5c53314a0fb93",
+  "last_bar": "2026-10-28 15:00:00+00:00",
   "strategies": {
     "trend_6_24": {
       "started_at": "2026-10-26 19:00:00+00:00",
       "cash": 2000.0,
       "equity": 2000.0,
       "positions": {},
-      "pending": {
-        "symbol": "QQQ",
-        "side": "buy",
-        "reason": "signal_entry",
-        "signal_bar": "2026-10-26 19:00:00+00:00"
-      },
+      "pending": null,
       "peak": 2000.0,
       "max_drawdown": 0.0,
       "day": "2026-10-26",
@@ -27,7 +21,8 @@
       "sessions": 1,
       "fills": 0,
       "round_trips": 0,
-      "modeled_cost": 0.0
+      "modeled_cost": 0.0,
+      "spy_start": 765.225
     },
     "breakout_12": {
       "started_at": "2026-10-26 19:00:00+00:00",
@@ -45,7 +40,8 @@
       "sessions": 1,
       "fills": 0,
       "round_trips": 0,
-      "modeled_cost": 0.0
+      "modeled_cost": 0.0,
+      "spy_start": 765.225
     },
     "reversion_20": {
       "started_at": "2026-10-26 19:00:00+00:00",
@@ -63,7 +59,8 @@
       "sessions": 1,
       "fills": 0,
       "round_trips": 0,
-      "modeled_cost": 0.0
+      "modeled_cost": 0.0,
+      "spy_start": 765.225
     },
     "selective_reversion_20": {
       "started_at": "2026-10-26 19:00:00+00:00",
@@ -81,19 +78,15 @@
       "sessions": 1,
       "fills": 0,
       "round_trips": 0,
-      "modeled_cost": 0.0
+      "modeled_cost": 0.0,
+      "spy_start": 765.225
     },
     "trend_24_72": {
       "started_at": "2026-10-26 19:00:00+00:00",
       "cash": 2000.0,
       "equity": 2000.0,
       "positions": {},
-      "pending": {
-        "symbol": "IWM",
-        "side": "buy",
-        "reason": "signal_entry",
-        "signal_bar": "2026-10-26 19:00:00+00:00"
-      },
+      "pending": null,
       "peak": 2000.0,
       "max_drawdown": 0.0,
       "day": "2026-10-26",
@@ -104,7 +97,8 @@
       "sessions": 1,
       "fills": 0,
       "round_trips": 0,
-      "modeled_cost": 0.0
+      "modeled_cost": 0.0,
+      "spy_start": 765.225
     },
     "rsi25_trend": {
       "started_at": "2026-10-26 19:00:00+00:00",
@@ -120,6 +114,26 @@
       "halted": false,
       "orders_today": 0,
       "sessions": 1,
+      "fills": 0,
+      "round_trips": 0,
+      "modeled_cost": 0.0,
+      "spy_start": 765.225
+    },
+    "trend_pullback_rsi_stoch": {
+      "started_at": "2026-10-28 15:00:00+00:00",
+      "cash": 2000.0,
+      "equity": 2000.0,
+      "spy_start": 771.33,
+      "positions": {},
+      "pending": null,
+      "peak": 2000.0,
+      "max_drawdown": 0.0,
+      "day": null,
+      "day_start": 2000.0,
+      "daily_halt": false,
+      "halted": false,
+      "orders_today": 0,
+      "sessions": 0,
       "fills": 0,
       "round_trips": 0,
       "modeled_cost": 0.0
