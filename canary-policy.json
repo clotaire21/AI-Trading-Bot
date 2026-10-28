@@ -1,7 +1,7 @@
 {
   "mode": "operational_canary_only",
   "orders_enabled": true,
-  "entries_enabled": true,
+  "entries_enabled": false,
   "strategy": "trend_6_24",
   "reason": "Validated second-account Alpaca Paper execution plumbing only. It is not investment evidence and cannot authorize the main account."
 }
