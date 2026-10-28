@@ -31,7 +31,8 @@ if shadow.exists():
     print('| Rank | Strategy | Sessions | Equity | Return % | vs SPY % | Drawdown % | Costs | Trips | Gate | Blockers | Positions |')
     print('|---:|---|---:|---:|---:|---:|---:|---:|---:|---|---|---|')
     for name in ('trend_6_24', 'breakout_12', 'reversion_20',
-                 'selective_reversion_20', 'trend_24_72', 'rsi25_trend'):
+                 'selective_reversion_20', 'trend_24_72', 'rsi25_trend',
+                 'trend_pullback_rsi_stoch'):
         item = data.get('strategies', {}).get(name)
         if item:
             positions = ', '.join(item.get('positions', [])) or 'cash'
@@ -42,7 +43,7 @@ if shadow.exists():
                   f"{float(item['return_pct']):.2f} | {float(item['excess_vs_spy_pct']):.2f} | "
                   f"{float(item['max_drawdown_pct']):.2f} | ${float(item['modeled_cost_usd']):.2f} | "
                   f"{int(item['round_trips'])} | {gate} | {blockers} | {positions} |")
-    print(f"\n60% SPY + cash reference: **{float(data['spy_60pct_return_pct']):.2f}%**. "
+    print("\nEach candidate is compared with 60% SPY + cash from its own start. "
           "These are modeled portfolios; no Alpaca order was sent.\n")
 
 audit = directory / 'accelerated-audit-report.json'

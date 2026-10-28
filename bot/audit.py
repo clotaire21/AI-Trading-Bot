@@ -13,7 +13,7 @@ from .config import LIMITS
 from .data import align_research, fingerprint, frames_from_bars
 from .provenance import payload_hash
 from .state import atomic_json, code_hash, load, now
-from .strategies import SHADOW_STRATEGIES, SHADOW_WARMUP
+from .strategies import AUDIT_STRATEGIES, SHADOW_WARMUP
 
 
 PLAN_FILE = Path("accelerated-audit-plan.json")
@@ -33,7 +33,7 @@ def _validate_plan(plan):
             plan.get("purpose") != "one_shot_pre_2023_resilience_check_no_promotion" or
             plan.get("start") != "2018-01-01T00:00:00Z" or
             plan.get("end") != "2023-01-01T00:00:00Z" or
-            tuple(plan.get("strategies", ())) != SHADOW_STRATEGIES or
+            tuple(plan.get("strategies", ())) != AUDIT_STRATEGIES or
             plan.get("minimum_sessions") != 750 or
             plan.get("minimum_round_trips") != 30 or
             plan.get("stress_slippage_bps_per_side") != 29 or
@@ -50,7 +50,7 @@ def evaluate(frames, plan, lock):
     matched = benchmark(frames["SPY"], start, end, plan["benchmark_allocation"])
     strategies = {}
     stressed_limits = replace(LIMITS, slippage_bps=plan["stress_slippage_bps_per_side"])
-    for name in SHADOW_STRATEGIES:
+    for name in AUDIT_STRATEGIES:
         normal = run(frames, name, start, end)
         stress = run(frames, name, start, end, stressed_limits)
         metrics = normal["metrics"]
@@ -76,7 +76,7 @@ def evaluate(frames, plan, lock):
             "robustness_screen_passed": not blockers,
             "blockers": blockers,
         }
-    leaderboard = sorted(SHADOW_STRATEGIES, key=lambda name: (
+    leaderboard = sorted(AUDIT_STRATEGIES, key=lambda name: (
         strategies[name]["robustness_screen_passed"],
         strategies[name]["excess_vs_spy_60pct"],
         strategies[name]["stress_metrics"]["return_pct"],

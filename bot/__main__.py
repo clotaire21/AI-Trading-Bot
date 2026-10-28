@@ -11,7 +11,7 @@ from .canary import canary_cycle, migrate_canary, renew_canary, validate_canary
 from .data import frames_from_bars, align_research
 from .research import compare, write_report
 from .runner import probe, cycle
-from .shadow import shadow_cycle
+from .shadow import migrate_shadow, shadow_cycle
 from .state import atomic_json, append_event, code_hash, load, now
 from .provenance import payload_hash, replay_origin
 
@@ -19,7 +19,7 @@ from .provenance import payload_hash, replay_origin
 def main():
     parser = argparse.ArgumentParser(description="Paper-only research lab; orders disabled by default")
     parser.add_argument("command", choices=(
-        "probe", "research", "audit", "validate", "renew", "selfcheck", "shadow", "paper",
+        "probe", "research", "audit", "validate", "renew", "selfcheck", "shadow", "shadow-migrate", "paper",
         "canary-probe", "canary-validate", "canary-migrate", "canary-paper", "canary-risk",
     ))
     parser.add_argument("--state-dir", default="runtime")
@@ -75,6 +75,10 @@ def main():
             print(json.dumps(renew(ReadOnlyPaper(), directory), indent=2))
         elif args.command == "shadow":
             report = shadow_cycle(ReadOnlyPaper(), directory)
+            print(json.dumps(report, indent=2))
+        elif args.command == "shadow-migrate":
+            subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], check=True)
+            report = migrate_shadow(ReadOnlyPaper(), directory)
             print(json.dumps(report, indent=2))
         elif args.command == "canary-probe":
             report = probe(ReadOnlyPaper(), directory)
