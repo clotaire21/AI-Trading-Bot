@@ -1,48 +1,43 @@
 {
   "schema": 3,
   "mode": "forward_shadow_no_orders",
-  "bar": "2026-10-28 18:00:00+00:00",
+  "bar": "2026-10-28 19:00:00+00:00",
   "code_sha256": "85e176052881d5cba7272c8fec25eadbd5e921509e7cc8c7bff5c53314a0fb93",
   "capital_per_strategy_usd": 2000.0,
   "strategies": {
     "trend_6_24": {
       "started_at": "2026-10-26 19:00:00+00:00",
-      "equity_usd": 1999.6437361202297,
-      "return_pct": -0.017813193988513998,
-      "excess_vs_spy_pct": -0.4290279715661538,
-      "spy_60pct_value_usd": 2008.2242955515526,
-      "spy_60pct_return_pct": 0.4112147775776398,
+      "equity_usd": 2003.331365475351,
+      "return_pct": 0.16656827376755334,
+      "excess_vs_spy_pct": -0.3261096843617528,
+      "spy_60pct_value_usd": 2009.8535591625862,
+      "spy_60pct_return_pct": 0.49267795812930615,
       "max_drawdown_pct": -0.03105891122870963,
       "sessions": 2,
-      "modeled_cost_usd": 0.7911306834055524,
-      "fills": 2,
+      "modeled_cost_usd": 1.1866939498551312,
+      "fills": 3,
       "round_trips": 0,
       "positions": [
+        "IWM",
         "QQQ",
         "SPY"
       ],
-      "pending": {
-        "symbol": "IWM",
-        "side": "buy",
-        "reason": "signal_entry",
-        "signal_bar": "2026-10-28 18:00:00+00:00"
-      },
+      "pending": null,
       "halted": false,
       "forward_gate_passed": false,
       "blockers": [
         "below_60_sessions",
         "below_30_round_trips",
-        "not_profitable",
         "does_not_beat_60pct_spy"
       ]
     },
     "breakout_12": {
       "started_at": "2026-10-26 19:00:00+00:00",
-      "equity_usd": 1999.327563079938,
-      "return_pct": -0.0336218460030957,
-      "excess_vs_spy_pct": -0.4448366235807355,
-      "spy_60pct_value_usd": 2008.2242955515526,
-      "spy_60pct_return_pct": 0.4112147775776398,
+      "equity_usd": 1999.8606535130111,
+      "return_pct": -0.006967324349438364,
+      "excess_vs_spy_pct": -0.4996452824787445,
+      "spy_60pct_value_usd": 2009.8535591625862,
+      "spy_60pct_return_pct": 0.49267795812930615,
       "max_drawdown_pct": -0.0336218460030957,
       "sessions": 2,
       "modeled_cost_usd": 0.3956399644279333,
@@ -65,9 +60,9 @@
       "started_at": "2026-10-26 19:00:00+00:00",
       "equity_usd": 2000.0,
       "return_pct": 0.0,
-      "excess_vs_spy_pct": -0.4112147775776398,
-      "spy_60pct_value_usd": 2008.2242955515526,
-      "spy_60pct_return_pct": 0.4112147775776398,
+      "excess_vs_spy_pct": -0.49267795812930615,
+      "spy_60pct_value_usd": 2009.8535591625862,
+      "spy_60pct_return_pct": 0.49267795812930615,
       "max_drawdown_pct": 0.0,
       "sessions": 2,
       "modeled_cost_usd": 0.0,
@@ -88,9 +83,9 @@
       "started_at": "2026-10-26 19:00:00+00:00",
       "equity_usd": 2000.0,
       "return_pct": 0.0,
-      "excess_vs_spy_pct": -0.4112147775776398,
-      "spy_60pct_value_usd": 2008.2242955515526,
-      "spy_60pct_return_pct": 0.4112147775776398,
+      "excess_vs_spy_pct": -0.49267795812930615,
+      "spy_60pct_value_usd": 2009.8535591625862,
+      "spy_60pct_return_pct": 0.49267795812930615,
       "max_drawdown_pct": 0.0,
       "sessions": 2,
       "modeled_cost_usd": 0.0,
@@ -109,11 +104,11 @@
     },
     "trend_24_72": {
       "started_at": "2026-10-26 19:00:00+00:00",
-      "equity_usd": 1998.8002001082505,
-      "return_pct": -0.05998999458747267,
-      "excess_vs_spy_pct": -0.4712047721651125,
-      "spy_60pct_value_usd": 2008.2242955515526,
-      "spy_60pct_return_pct": 0.4112147775776398,
+      "equity_usd": 2000.859978167706,
+      "return_pct": 0.04299890838530551,
+      "excess_vs_spy_pct": -0.44967904974400064,
+      "spy_60pct_value_usd": 2009.8535591625862,
+      "spy_60pct_return_pct": 0.49267795812930615,
       "max_drawdown_pct": -0.05998999458747267,
       "sessions": 2,
       "modeled_cost_usd": 0.3956399644279575,
@@ -128,7 +123,6 @@
       "blockers": [
         "below_60_sessions",
         "below_30_round_trips",
-        "not_profitable",
         "does_not_beat_60pct_spy"
       ]
     },
@@ -136,9 +130,9 @@
       "started_at": "2026-10-26 19:00:00+00:00",
       "equity_usd": 2000.0,
       "return_pct": 0.0,
-      "excess_vs_spy_pct": -0.4112147775776398,
-      "spy_60pct_value_usd": 2008.2242955515526,
-      "spy_60pct_return_pct": 0.4112147775776398,
+      "excess_vs_spy_pct": -0.49267795812930615,
+      "spy_60pct_value_usd": 2009.8535591625862,
+      "spy_60pct_return_pct": 0.49267795812930615,
       "max_drawdown_pct": 0.0,
       "sessions": 2,
       "modeled_cost_usd": 0.0,
@@ -159,9 +153,9 @@
       "started_at": "2026-10-28 15:00:00+00:00",
       "equity_usd": 2000.0,
       "return_pct": 0.0,
-      "excess_vs_spy_pct": 0.06693396059814782,
-      "spy_60pct_value_usd": 1998.661320788037,
-      "spy_60pct_return_pct": -0.06693396059814782,
+      "excess_vs_spy_pct": -0.013884447006451417,
+      "spy_60pct_value_usd": 2000.277688940129,
+      "spy_60pct_return_pct": 0.013884447006451417,
       "max_drawdown_pct": 0.0,
       "sessions": 1,
       "modeled_cost_usd": 0.0,
@@ -174,18 +168,19 @@
       "blockers": [
         "below_60_sessions",
         "below_30_round_trips",
-        "not_profitable"
+        "not_profitable",
+        "does_not_beat_60pct_spy"
       ]
     }
   },
   "leaderboard": [
     "trend_pullback_rsi_stoch",
+    "trend_6_24",
+    "trend_24_72",
     "reversion_20",
     "selective_reversion_20",
     "rsi25_trend",
-    "trend_6_24",
-    "breakout_12",
-    "trend_24_72"
+    "breakout_12"
   ],
   "warning": "Modeled portfolios only; forward gate is diagnostic and cannot authorize Alpaca orders."
 }
