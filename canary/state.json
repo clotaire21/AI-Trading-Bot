@@ -12,23 +12,15 @@
     "QQQ": "2026-10-27 17:00:00+00:00"
   },
   "last_bar": "2026-10-28 18:00:00+00:00",
-  "pending": {
-    "symbol": "IWM",
-    "side": "sell",
-    "qty": "1.425075000",
-    "limit_price": "282.95",
-    "client_id": "lab-7a5eeb9b1333d36efb35c2daee34f7eb",
-    "bar": "risk-watch"
-  },
+  "pending": null,
   "benchmark_start": 765.95,
   "initial_equity": 2000.0,
-  "modeled_cost": 1.1861204025460002,
+  "modeled_cost": 1.5897443947960002,
   "tracked_quantities": {
-    "IWM": "1.425075",
     "QQQ": "0.549023",
     "SPY": "0.513352"
   },
-  "tracked_cash": 813.8795974539998,
+  "tracked_cash": 1217.503589704,
   "last_equity": 2002.053879597454,
   "max_drawdown": -0.0017451538129219513,
   "entries_enabled": false,
