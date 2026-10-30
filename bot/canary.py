@@ -13,7 +13,8 @@ import sys
 from .alpaca import ExecutionPaper, ReadOnlyPaper, SafetyError
 from .config import SYMBOLS
 from .risk import account_values, number
-from .runner import (FILL_CASH_RECONCILIATION_TOLERANCE, account_hash,
+from .runner import (FILL_CASH_RECONCILIATION_TOLERANCE,
+                     SELL_CASH_RECONCILIATION_TOLERANCE, account_hash,
                      cycle, probe)
 from .state import append_event, atomic_json, code_hash, load, now
 
@@ -163,7 +164,8 @@ def migrate_canary(client, directory, main_directory):
             proof.get("strategy") != CANARY_STRATEGY or
             proof.get("performance_evidence") is not False or
             state.get("pending") is not None or open_orders or observed != tracked or
-            abs(cash_rounding_adjustment) > FILL_CASH_RECONCILIATION_TOLERANCE):
+            not (-SELL_CASH_RECONCILIATION_TOLERANCE <= cash_rounding_adjustment <=
+                 FILL_CASH_RECONCILIATION_TOLERANCE)):
         raise SafetyError("Canary migration state or predecessor mismatch")
     for value in (*observed.values(), *tracked.values()):
         if not value.is_finite() or value <= 0:

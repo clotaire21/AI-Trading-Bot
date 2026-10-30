@@ -24,6 +24,9 @@ CASH_DRIFT_TOLERANCE = .02
 # cents by the broker. A state already inside the normal 2-cent guard can gain
 # at most another cent of representation drift at a fully explained fill.
 FILL_CASH_RECONCILIATION_TOLERANCE = .03
+# The canary also demonstrated two one-cent deductions from fractional sell
+# proceeds. Only negative sell adjustments receive this extra allowance.
+SELL_CASH_RECONCILIATION_TOLERANCE = .05
 
 
 def account_hash(account):
@@ -130,7 +133,12 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_on
             expected_cash = state["tracked_cash"] + notional * (
                 -1 if pending["side"] == "buy" else 1)
             cash_adjustment = cash - expected_cash
-            if abs(cash_adjustment) > FILL_CASH_RECONCILIATION_TOLERANCE:
+            lower_cash_tolerance = (
+                SELL_CASH_RECONCILIATION_TOLERANCE
+                if pending["side"] == "sell"
+                else FILL_CASH_RECONCILIATION_TOLERANCE)
+            if not (-lower_cash_tolerance <= cash_adjustment <=
+                    FILL_CASH_RECONCILIATION_TOLERANCE):
                 raise SafetyError("Fill does not explain observed cash change")
             # Reset to the broker-observed cash so sub-cent fractional notional
             # rounding cannot accumulate across otherwise explained fills.
