@@ -167,7 +167,7 @@ class CanaryTests(unittest.TestCase):
             root = Path(root)
             main, canary = root / "runtime", root / "canary"
             client, account_data = self.client()
-            account_data.update(cash="1217.48", equity="2000")
+            account_data.update(cash="1217.46", equity="2000")
             positions = [
                 dict(symbol="QQQ", side="long", qty="0.549023", market_value="400",
                      avg_entry_price="728", current_price=str(400 / .549023)),
@@ -194,14 +194,14 @@ class CanaryTests(unittest.TestCase):
             atomic_json(canary / "state.json", base_state)
             atomic_json(canary / "canary-validation.json", proof)
             migrate_canary(client, canary, main)
-            self.assertEqual(load(canary / "state.json")["tracked_cash"], 1217.48)
+            self.assertEqual(load(canary / "state.json")["tracked_cash"], 1217.46)
             self.assertIn("cash_rounding_reconciled",
                           (canary / "journal.jsonl").read_text())
 
             proof["code_sha256"] = predecessor
             proof["at"] = datetime.now(timezone.utc).isoformat()
             atomic_json(canary / "canary-validation.json", proof)
-            base_state["tracked_cash"] = 1218.48
+            base_state["tracked_cash"] = 1218.46
             atomic_json(canary / "state.json", base_state)
             with self.assertRaisesRegex(SafetyError, "predecessor mismatch"):
                 migrate_canary(client, canary, main)

@@ -197,20 +197,22 @@ class RunnerTests(unittest.TestCase):
 
     def test_explained_fractional_fill_resets_subcent_cash_drift(self):
         drain, _ = self.prepare_fractional_sell_fill()
-        # 1600 + (4 * 95.001) is reported by the account at cent precision.
-        self.a.update(cash="1980.00", equity="1980.00")
+        # Alpaca reported two additional one-cent deductions on the canary
+        # fractional sale, on top of the independently rounded proceeds.
+        self.a.update(cash="1979.98", equity="1979.98")
         self.client.bars.side_effect = AssertionError("flat drain must not fetch bars")
         cycle(self.client, self.directory, drain, True)
         state = load(self.directory / "state.json")
-        self.assertEqual(state["tracked_cash"], 1980.0)
+        self.assertEqual(state["tracked_cash"], 1979.98)
         self.assertIsNone(state["pending"])
         self.assertTrue(state["drain_complete"])
         journal = (self.directory / "journal.jsonl").read_text()
-        self.assertIn('"cash_rounding_adjustment": -0.023', journal)
+        self.assertIn('"cash_rounding_adjustment": -0.043', journal)
 
     def test_fill_reconciliation_still_rejects_unexplained_cash(self):
         drain, pending = self.prepare_fractional_sell_fill()
-        self.a.update(cash="1981.00", equity="1981.00")
+        # Positive drift keeps the stricter three-cent bound even for a sell.
+        self.a.update(cash="1980.06", equity="1980.06")
         with self.assertRaisesRegex(SafetyError, "does not explain observed cash"):
             cycle(self.client, self.directory, drain, True)
         self.assertEqual(load(self.directory / "state.json")["pending"], pending)
