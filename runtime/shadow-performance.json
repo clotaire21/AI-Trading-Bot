@@ -1,50 +1,48 @@
 {
   "schema": 3,
   "mode": "forward_shadow_no_orders",
-  "bar": "2026-10-29 19:00:00+00:00",
+  "bar": "2026-10-30 18:00:00+00:00",
   "code_sha256": "3af3da87c60ff8917d39faf7bde49a48204441c32a500b2c8cc7793b801e4774",
   "capital_per_strategy_usd": 2000.0,
   "strategies": {
     "trend_6_24": {
       "started_at": "2026-10-26 19:00:00+00:00",
-      "equity_usd": 1997.1365944991426,
-      "return_pct": -0.14317027504286983,
-      "excess_vs_spy_pct": -0.4173075853460384,
-      "spy_60pct_value_usd": 2005.4827462060632,
-      "spy_60pct_return_pct": 0.27413731030316857,
-      "max_drawdown_pct": -0.3941474467478723,
-      "sessions": 3,
-      "modeled_cost_usd": 2.374507555433292,
-      "fills": 6,
-      "round_trips": 2,
+      "equity_usd": 1983.4241290070077,
+      "return_pct": -0.8287935496496202,
+      "excess_vs_spy_pct": 0.26236071410092876,
+      "spy_60pct_value_usd": 1978.176914724989,
+      "spy_60pct_return_pct": -1.091154263750549,
+      "max_drawdown_pct": -0.9937066234481762,
+      "sessions": 4,
+      "modeled_cost_usd": 2.7646075005051998,
+      "fills": 7,
+      "round_trips": 3,
       "positions": [
-        "IWM",
-        "SPY"
+        "IWM"
       ],
       "pending": {
-        "symbol": "SPY",
+        "symbol": "IWM",
         "side": "sell",
         "reason": "signal_exit",
-        "signal_bar": "2026-10-29 19:00:00+00:00"
+        "signal_bar": "2026-10-30 18:00:00+00:00"
       },
       "halted": false,
       "forward_gate_passed": false,
       "blockers": [
         "below_60_sessions",
         "below_30_round_trips",
-        "not_profitable",
-        "does_not_beat_60pct_spy"
+        "not_profitable"
       ]
     },
     "breakout_12": {
       "started_at": "2026-10-26 19:00:00+00:00",
       "equity_usd": 1997.6725680377617,
       "return_pct": -0.11637159811190845,
-      "excess_vs_spy_pct": -0.390508908415077,
-      "spy_60pct_value_usd": 2005.4827462060632,
-      "spy_60pct_return_pct": 0.27413731030316857,
+      "excess_vs_spy_pct": 0.9747826656386405,
+      "spy_60pct_value_usd": 1978.176914724989,
+      "spy_60pct_return_pct": -1.091154263750549,
       "max_drawdown_pct": -0.11637159811190845,
-      "sessions": 3,
+      "sessions": 4,
       "modeled_cost_usd": 0.7896710976049608,
       "fills": 2,
       "round_trips": 1,
@@ -55,65 +53,73 @@
       "blockers": [
         "below_60_sessions",
         "below_30_round_trips",
-        "not_profitable",
-        "does_not_beat_60pct_spy"
+        "not_profitable"
       ]
     },
     "reversion_20": {
       "started_at": "2026-10-26 19:00:00+00:00",
-      "equity_usd": 2000.0,
-      "return_pct": 0.0,
-      "excess_vs_spy_pct": -0.27413731030316857,
-      "spy_60pct_value_usd": 2005.4827462060632,
-      "spy_60pct_return_pct": 0.27413731030316857,
-      "max_drawdown_pct": 0.0,
-      "sessions": 3,
-      "modeled_cost_usd": 0.0,
-      "fills": 0,
+      "equity_usd": 1990.6368323568754,
+      "return_pct": -0.4681583821562252,
+      "excess_vs_spy_pct": 0.6229958815943237,
+      "spy_60pct_value_usd": 1978.176914724989,
+      "spy_60pct_return_pct": -1.091154263750549,
+      "max_drawdown_pct": -0.4681583821562252,
+      "sessions": 4,
+      "modeled_cost_usd": 0.7910121481662076,
+      "fills": 2,
       "round_trips": 0,
-      "positions": [],
-      "pending": null,
+      "positions": [
+        "QQQ",
+        "SPY"
+      ],
+      "pending": {
+        "symbol": "IWM",
+        "side": "buy",
+        "reason": "signal_entry",
+        "signal_bar": "2026-10-30 18:00:00+00:00"
+      },
       "halted": false,
       "forward_gate_passed": false,
       "blockers": [
         "below_60_sessions",
         "below_30_round_trips",
-        "not_profitable",
-        "does_not_beat_60pct_spy"
+        "not_profitable"
       ]
     },
     "selective_reversion_20": {
       "started_at": "2026-10-26 19:00:00+00:00",
-      "equity_usd": 2000.0,
-      "return_pct": 0.0,
-      "excess_vs_spy_pct": -0.27413731030316857,
-      "spy_60pct_value_usd": 2005.4827462060632,
-      "spy_60pct_return_pct": 0.27413731030316857,
-      "max_drawdown_pct": 0.0,
-      "sessions": 3,
-      "modeled_cost_usd": 0.0,
-      "fills": 0,
+      "equity_usd": 1990.6368323568754,
+      "return_pct": -0.4681583821562252,
+      "excess_vs_spy_pct": 0.6229958815943237,
+      "spy_60pct_value_usd": 1978.176914724989,
+      "spy_60pct_return_pct": -1.091154263750549,
+      "max_drawdown_pct": -0.4681583821562252,
+      "sessions": 4,
+      "modeled_cost_usd": 0.7910121481662076,
+      "fills": 2,
       "round_trips": 0,
-      "positions": [],
+      "positions": [
+        "QQQ",
+        "SPY"
+      ],
       "pending": null,
       "halted": false,
       "forward_gate_passed": false,
       "blockers": [
         "below_60_sessions",
         "below_30_round_trips",
-        "not_profitable",
-        "does_not_beat_60pct_spy"
+        "not_profitable"
       ]
     },
     "trend_24_72": {
       "started_at": "2026-10-26 19:00:00+00:00",
-      "equity_usd": 2004.162155524213,
-      "return_pct": 0.20810777621065313,
-      "excess_vs_spy_pct": -0.06602953409251544,
-      "spy_60pct_value_usd": 2005.4827462060632,
-      "spy_60pct_return_pct": 0.27413731030316857,
-      "max_drawdown_pct": -0.10983163087328052,
-      "sessions": 3,
+      "equity_usd": 1995.0984625929782,
+      "return_pct": -0.24507687035109083,
+      "excess_vs_spy_pct": 0.8460773933994581,
+      "spy_60pct_value_usd": 1978.176914724989,
+      "spy_60pct_return_pct": -1.091154263750549,
+      "max_drawdown_pct": -0.5299224648862455,
+      "sessions": 4,
       "modeled_cost_usd": 1.983168812325629,
       "fills": 5,
       "round_trips": 2,
@@ -126,41 +132,18 @@
       "blockers": [
         "below_60_sessions",
         "below_30_round_trips",
-        "does_not_beat_60pct_spy"
+        "not_profitable"
       ]
     },
     "rsi25_trend": {
       "started_at": "2026-10-26 19:00:00+00:00",
       "equity_usd": 2000.0,
       "return_pct": 0.0,
-      "excess_vs_spy_pct": -0.27413731030316857,
-      "spy_60pct_value_usd": 2005.4827462060632,
-      "spy_60pct_return_pct": 0.27413731030316857,
+      "excess_vs_spy_pct": 1.091154263750549,
+      "spy_60pct_value_usd": 1978.176914724989,
+      "spy_60pct_return_pct": -1.091154263750549,
       "max_drawdown_pct": 0.0,
-      "sessions": 3,
-      "modeled_cost_usd": 0.0,
-      "fills": 0,
-      "round_trips": 0,
-      "positions": [],
-      "pending": null,
-      "halted": false,
-      "forward_gate_passed": false,
-      "blockers": [
-        "below_60_sessions",
-        "below_30_round_trips",
-        "not_profitable",
-        "does_not_beat_60pct_spy"
-      ]
-    },
-    "trend_pullback_rsi_stoch": {
-      "started_at": "2026-10-28 15:00:00+00:00",
-      "equity_usd": 2000.0,
-      "return_pct": 0.0,
-      "excess_vs_spy_pct": 0.20292647339436032,
-      "spy_60pct_value_usd": 1995.9414705321128,
-      "spy_60pct_return_pct": -0.20292647339436032,
-      "max_drawdown_pct": 0.0,
-      "sessions": 2,
+      "sessions": 4,
       "modeled_cost_usd": 0.0,
       "fills": 0,
       "round_trips": 0,
@@ -173,15 +156,42 @@
         "below_30_round_trips",
         "not_profitable"
       ]
+    },
+    "trend_pullback_rsi_stoch": {
+      "started_at": "2026-10-28 15:00:00+00:00",
+      "equity_usd": 2000.0,
+      "return_pct": 0.0,
+      "excess_vs_spy_pct": 1.557411900844674,
+      "spy_60pct_value_usd": 1968.8517619831066,
+      "spy_60pct_return_pct": -1.557411900844674,
+      "max_drawdown_pct": 0.0,
+      "sessions": 3,
+      "modeled_cost_usd": 0.0,
+      "fills": 0,
+      "round_trips": 0,
+      "positions": [],
+      "pending": {
+        "symbol": "IWM",
+        "side": "buy",
+        "reason": "signal_entry",
+        "signal_bar": "2026-10-30 18:00:00+00:00"
+      },
+      "halted": false,
+      "forward_gate_passed": false,
+      "blockers": [
+        "below_60_sessions",
+        "below_30_round_trips",
+        "not_profitable"
+      ]
     }
   },
   "leaderboard": [
     "trend_pullback_rsi_stoch",
+    "rsi25_trend",
+    "breakout_12",
     "trend_24_72",
     "reversion_20",
     "selective_reversion_20",
-    "rsi25_trend",
-    "breakout_12",
     "trend_6_24"
   ],
   "warning": "Modeled portfolios only; forward gate is diagnostic and cannot authorize Alpaca orders."

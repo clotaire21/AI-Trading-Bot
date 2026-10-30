@@ -1,43 +1,43 @@
 {
   "event": "decision",
-  "bar": "2026-10-28 18:00:00+00:00",
+  "bar": "2026-10-30 18:00:00+00:00",
   "strategy": "trend_6_24",
   "entries_enabled": false,
-  "equity_usd": 2005.75,
-  "net_modeled_equity_usd": 2004.563879597454,
-  "return_pct": 0.2874999999999961,
-  "net_return_pct": 0.22819397987270396,
-  "spy_return_pct": 0.6906456034989183,
-  "max_drawdown_pct": -0.057839383513991205,
-  "benchmark_timestamp": "2026-10-28 18:00:00+00:00",
-  "account_timestamp": "2026-10-28T15:38:08.681279909-04:00",
-  "spy_price_benchmark_usd": 2013.8129120699784,
-  "cash_usd": 813.86,
+  "equity_usd": 1979.77,
+  "net_modeled_equity_usd": 1977.804743638032,
+  "return_pct": -1.0114999999999985,
+  "net_return_pct": -1.109762818098392,
+  "spy_return_pct": -1.813434297277905,
+  "max_drawdown_pct": -1.4336999012971474,
+  "benchmark_timestamp": "2026-10-30 18:00:00+00:00",
+  "account_timestamp": "2026-10-30T15:27:17.909634267-04:00",
+  "spy_price_benchmark_usd": 1963.731314054442,
+  "cash_usd": 1592.97,
   "halted": false,
   "daily_halt": false,
   "execute": true,
-  "code_sha256": "85e176052881d5cba7272c8fec25eadbd5e921509e7cc8c7bff5c53314a0fb93",
+  "code_sha256": "3af3da87c60ff8917d39faf7bde49a48204441c32a500b2c8cc7793b801e4774",
   "decisions": [
     {
       "symbol": "SPY",
-      "reason": "hold",
-      "enter": true,
-      "exit": false,
-      "reference_price": 771.24
+      "reason": "time_or_signal_exit",
+      "enter": false,
+      "exit": true,
+      "reference_price": 752.06
     },
     {
       "symbol": "QQQ",
-      "reason": "hold",
-      "enter": true,
-      "exit": false,
-      "reference_price": 723.68
+      "reason": "no_signal",
+      "enter": false,
+      "exit": true,
+      "reference_price": 685.64
     },
     {
       "symbol": "IWM",
-      "reason": "hold",
-      "enter": true,
-      "exit": false,
-      "reference_price": 279.84
+      "reason": "no_signal",
+      "enter": false,
+      "exit": true,
+      "reference_price": 277.52
     }
   ]
 }

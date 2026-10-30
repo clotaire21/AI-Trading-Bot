@@ -5,30 +5,29 @@
   "day_start": 2002.053879597454,
   "daily_halt": false,
   "halted": false,
-  "orders_today": 1,
+  "orders_today": 2,
   "entries": {
     "IWM": "2026-10-26 17:00:00+00:00",
     "SPY": "2026-10-27 15:00:00+00:00",
     "QQQ": "2026-10-27 17:00:00+00:00"
   },
-  "last_bar": "2026-10-28 18:00:00+00:00",
+  "last_bar": "2026-10-30 18:00:00+00:00",
   "pending": {
-    "symbol": "QQQ",
+    "symbol": "SPY",
     "side": "sell",
-    "qty": "0.549023000",
-    "limit_price": "683.26",
-    "client_id": "lab-ee1f9c427f40c73575904ff9f8ced15e",
-    "bar": "risk-watch"
+    "qty": "0.513352000",
+    "limit_price": "751.30",
+    "client_id": "lab-fa4ed61039b971093a1ad46324dd9f21",
+    "bar": "2026-10-30 18:00:00+00:00"
   },
   "benchmark_start": 765.95,
   "initial_equity": 2000.0,
-  "modeled_cost": 1.5897443947960002,
+  "modeled_cost": 1.9652563619680001,
   "tracked_quantities": {
-    "QQQ": "0.549023",
     "SPY": "0.513352"
   },
-  "tracked_cash": 1217.46,
-  "last_equity": 1976.800255605204,
+  "tracked_cash": 1592.97,
+  "last_equity": 1977.804743638032,
   "max_drawdown": -0.014336999012971474,
   "entries_enabled": false,
   "drain_complete": false
