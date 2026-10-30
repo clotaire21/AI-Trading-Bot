@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-28T17:03:33.643897+00:00",
+  "at": "2026-10-30T12:42:30.723624+00:00",
   "endpoint": "https://paper-api.alpaca.markets",
   "read_only": true,
   "account_hash": "67b6b0fef12f5bdf131a206fcef3d65035e9dd24d3b053ef72a88823ffccd0b1",
@@ -9,8 +9,8 @@
   "open_orders_count": 0,
   "historical_orders_count_capped_500": 0,
   "assets_ready": true,
-  "market_open": true,
-  "last_bar": "2026-10-28 16:00:00+00:00",
-  "code_sha256": "85e176052881d5cba7272c8fec25eadbd5e921509e7cc8c7bff5c53314a0fb93",
+  "market_open": false,
+  "last_bar": "2026-10-29 19:00:00+00:00",
+  "code_sha256": "dc139bbd700ad0372d7956b564e3d6d99af430648b00c48a9ef76aa5c3cfeb06",
   "dedicated_2000_account_ready": true
 }
