@@ -162,6 +162,50 @@ class CanaryTests(unittest.TestCase):
             self.assertAlmostEqual(state["modeled_cost"], .1)
             self.assertIn("canary_migration", (canary / "journal.jsonl").read_text())
 
+    def test_canary_migration_repairs_only_small_cash_rounding_drift(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root)
+            main, canary = root / "runtime", root / "canary"
+            client, account_data = self.client()
+            account_data.update(cash="1217.48", equity="2000")
+            positions = [
+                dict(symbol="QQQ", side="long", qty="0.549023", market_value="400",
+                     avg_entry_price="728", current_price=str(400 / .549023)),
+                dict(symbol="SPY", side="long", qty="0.513352", market_value="382.52",
+                     avg_entry_price="745", current_price=str(382.52 / .513352)),
+            ]
+            client.positions.return_value = positions
+            identity = account_hash(account_data)
+            main_hash = "a" * 64
+            predecessor = "85e176052881d5cba7272c8fec25eadbd5e921509e7cc8c7bff5c53314a0fb93"
+            atomic_json(main / "connection.json", {"account_hash": main_hash})
+            base_state = {
+                "account_hash": identity,
+                "tracked_quantities": {p["symbol"]: p["qty"] for p in positions},
+                "tracked_cash": 1217.503589704, "pending": None,
+            }
+            proof = {
+                "schema": 2, "at": datetime.now(timezone.utc).isoformat(),
+                "code_sha256": predecessor, "safety_tests_passed": True,
+                "connection_passed": True, "account_hash": identity,
+                "main_account_hash": main_hash, "mode": "operational_canary_only",
+                "strategy": "trend_6_24", "performance_evidence": False,
+            }
+            atomic_json(canary / "state.json", base_state)
+            atomic_json(canary / "canary-validation.json", proof)
+            migrate_canary(client, canary, main)
+            self.assertEqual(load(canary / "state.json")["tracked_cash"], 1217.48)
+            self.assertIn("cash_rounding_reconciled",
+                          (canary / "journal.jsonl").read_text())
+
+            proof["code_sha256"] = predecessor
+            proof["at"] = datetime.now(timezone.utc).isoformat()
+            atomic_json(canary / "canary-validation.json", proof)
+            base_state["tracked_cash"] = 1218.48
+            atomic_json(canary / "state.json", base_state)
+            with self.assertRaisesRegex(SafetyError, "predecessor mismatch"):
+                migrate_canary(client, canary, main)
+
 
 if __name__ == "__main__":
     unittest.main()

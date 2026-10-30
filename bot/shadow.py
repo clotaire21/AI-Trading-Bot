@@ -24,8 +24,12 @@ from .strategies import SHADOW_STRATEGIES, SHADOW_WARMUP, signals
 STATE_FILE = "shadow-state.json"
 REPORT_FILE = "shadow-performance.json"
 SHADOW_SCHEMA = 3
+SHADOW_V2_PREDECESSOR = "31e357916a0bbb7df545fc07ff8296952474e5ba5c981ee5d8d17288f7440504"
+SHADOW_CODE_PREDECESSORS = frozenset({
+    "85e176052881d5cba7272c8fec25eadbd5e921509e7cc8c7bff5c53314a0fb93",
+})
 SHADOW_MIGRATION_PREDECESSORS = frozenset({
-    "31e357916a0bbb7df545fc07ff8296952474e5ba5c981ee5d8d17288f7440504",
+    SHADOW_V2_PREDECESSOR, *SHADOW_CODE_PREDECESSORS,
 })
 
 
@@ -286,7 +290,7 @@ def _shadow_inputs(client):
 
 
 def migrate_shadow(client, directory):
-    """Advance a reviewed schema-2 state to V2 without inventing observations."""
+    """Apply an explicitly reviewed shadow upgrade without inventing observations."""
     if type(client) is not ReadOnlyPaper:
         raise SafetyError("Shadow migration requires the read-only broker client")
     directory = Path(directory)
@@ -294,17 +298,37 @@ def migrate_shadow(client, directory):
     state = load(directory / STATE_FILE)
     previous = state.get("code_sha256")
     old_names = set(SHADOW_STRATEGIES) - {"trend_pullback_rsi_stoch"}
-    if (state.get("schema") != 2 or previous not in SHADOW_MIGRATION_PREDECESSORS or
-            state.get("account_hash") != _account_hash(account) or
-            set(state.get("strategies", {})) != old_names):
+    schema2_upgrade = (state.get("schema") == 2 and
+                       previous == SHADOW_V2_PREDECESSOR and
+                       set(state.get("strategies", {})) == old_names)
+    code_only_upgrade = (state.get("schema") == SHADOW_SCHEMA and
+                         previous in SHADOW_CODE_PREDECESSORS and
+                         set(state.get("strategies", {})) == set(SHADOW_STRATEGIES))
+    if (not (schema2_upgrade or code_only_upgrade) or
+            state.get("account_hash") != _account_hash(account)):
         raise SafetyError("Invalid shadow migration evidence")
     latest = frames[SYMBOLS[0]].index[-1]
     try:
         last = pd.Timestamp(state["last_bar"])
+    except (KeyError, TypeError, ValueError):
+        raise SafetyError("Invalid shadow migration evidence") from None
+    if last > latest or last not in frames[SYMBOLS[0]].index:
+        raise SafetyError("Invalid shadow migration evidence")
+    if code_only_upgrade:
+        state["code_sha256"] = code_hash()
+        report = _report(state, frames)
+        atomic_json(directory / STATE_FILE, state)
+        atomic_json(directory / REPORT_FILE, report)
+        append_event(directory, {
+            "event": "shadow_migration", "bar": str(last),
+            "migrated_from": previous, "code_only": True,
+        })
+        return report
+    try:
         old_spy_start = float(state["spy_start"])
     except (KeyError, TypeError, ValueError):
         raise SafetyError("Invalid shadow migration evidence") from None
-    if last > latest or not math.isfinite(old_spy_start) or old_spy_start <= 0:
+    if not math.isfinite(old_spy_start) or old_spy_start <= 0:
         raise SafetyError("Invalid shadow migration evidence")
     skipped = []
     for name, portfolio in state["strategies"].items():

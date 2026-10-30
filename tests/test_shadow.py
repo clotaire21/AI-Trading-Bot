@@ -6,8 +6,8 @@ import hashlib
 import numpy as np
 
 from bot.alpaca import ExecutionPaper, ReadOnlyPaper, SafetyError
-from bot.shadow import (SHADOW_MIGRATION_PREDECESSORS, advance,
-                        migrate_shadow, shadow_cycle)
+from bot.shadow import (SHADOW_CODE_PREDECESSORS, SHADOW_V2_PREDECESSOR,
+                        advance, migrate_shadow, shadow_cycle)
 from bot.state import atomic_json, code_hash, load
 from bot.strategies import SHADOW_STRATEGIES, STRATEGIES
 from helpers import account, frames
@@ -82,7 +82,7 @@ class ShadowTests(unittest.TestCase):
         advance(self.data, self.directory, identity)
         state = load(self.directory / "shadow-state.json")
         state["schema"] = 2
-        state["code_sha256"] = next(iter(SHADOW_MIGRATION_PREDECESSORS))
+        state["code_sha256"] = SHADOW_V2_PREDECESSOR
         state["spy_start"] = state["strategies"]["trend_6_24"]["spy_start"]
         state["strategies"].pop("trend_pullback_rsi_stoch")
         for portfolio in state["strategies"].values():
@@ -105,6 +105,35 @@ class ShadowTests(unittest.TestCase):
         journal = (self.directory / "journal.jsonl").read_text()
         self.assertIn("shadow_migration", journal)
         self.assertIn(pending["symbol"], journal)
+
+    def test_reviewed_code_only_migration_preserves_v2_state(self):
+        identity = hashlib.sha256(account()["id"].encode()).hexdigest()
+        advance(self.data, self.directory, identity)
+        state = load(self.directory / "shadow-state.json")
+        previous = next(iter(SHADOW_CODE_PREDECESSORS))
+        state["code_sha256"] = previous
+        expected_last = state["last_bar"]
+        expected = {
+            name: (portfolio["sessions"], portfolio["fills"],
+                   portfolio["round_trips"], portfolio["pending"])
+            for name, portfolio in state["strategies"].items()
+        }
+        atomic_json(self.directory / "shadow-state.json", state)
+        with patch.dict("os.environ", {"ALPACA_API_KEY": "x", "ALPACA_SECRET_KEY": "y"}), \
+                patch("bot.shadow._shadow_inputs", return_value=(account(), self.data)):
+            report = migrate_shadow(ReadOnlyPaper(), self.directory)
+        migrated = load(self.directory / "shadow-state.json")
+        self.assertEqual(migrated["code_sha256"], code_hash())
+        self.assertEqual(migrated["last_bar"], expected_last)
+        self.assertEqual({
+            name: (portfolio["sessions"], portfolio["fills"],
+                   portfolio["round_trips"], portfolio["pending"])
+            for name, portfolio in migrated["strategies"].items()
+        }, expected)
+        self.assertEqual(report["bar"], expected_last)
+        journal = (self.directory / "journal.jsonl").read_text()
+        self.assertIn('"code_only": true', journal)
+        self.assertIn(previous, journal)
 
 
 if __name__ == "__main__":
