@@ -19,6 +19,13 @@ from .strategies import signals, STRATEGIES
 from .provenance import check_research_evidence
 
 
+CASH_DRIFT_TOLERANCE = .02
+# The account cash and fractional fill notional are independently rounded to
+# cents by the broker. A state already inside the normal 2-cent guard can gain
+# at most another cent of representation drift at a fully explained fill.
+FILL_CASH_RECONCILIATION_TOLERANCE = .03
+
+
 def account_hash(account):
     return hashlib.sha256(account["id"].encode()).hexdigest()
 
@@ -97,6 +104,7 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_on
     # Reconcile any ambiguous POST before another decision. Never retry POST.
     if state.get("pending"):
         pending = state["pending"]
+        cash_adjustment = 0.0
         recent = client.orders("all")
         matching = [o for o in recent if o.get("client_order_id") == pending["client_id"]]
         if not matching or matching[0]["status"] not in ("filled", "canceled", "expired", "rejected"):
@@ -119,20 +127,28 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_on
                 raise SafetyError("Fill violates positive price/order limit")
             notional = filled * average
             state["modeled_cost"] += notional * .001
-            state["tracked_cash"] += notional * (-1 if pending["side"] == "buy" else 1)
+            expected_cash = state["tracked_cash"] + notional * (
+                -1 if pending["side"] == "buy" else 1)
+            cash_adjustment = cash - expected_cash
+            if abs(cash_adjustment) > FILL_CASH_RECONCILIATION_TOLERANCE:
+                raise SafetyError("Fill does not explain observed cash change")
+            # Reset to the broker-observed cash so sub-cent fractional notional
+            # rounding cannot accumulate across otherwise explained fills.
+            state["tracked_cash"] = cash
             if pending["side"] == "buy":
                 state["entries"][pending["symbol"]] = pending["bar"]
         state["tracked_quantities"] = {p["symbol"]: p["qty"] for p in positions}
         state["pending"] = None
         append_event(directory, {"event": "order_reconciled", "client_id": pending["client_id"],
                                   "status": order["status"], "filled_qty": filled,
-                                  "filled_avg_price": order.get("filled_avg_price")})
+                                  "filled_avg_price": order.get("filled_avg_price"),
+                                  "cash_rounding_adjustment": cash_adjustment})
         atomic_json(state_path, state)
     observed = {p["symbol"]: DecimalQty(p["qty"]) for p in positions}
     tracked = {s: DecimalQty(q) for s, q in state["tracked_quantities"].items()}
     if observed != tracked:
         raise SafetyError("Unexplained position change (manual trade/corporate action); suspend")
-    if abs(cash - state["tracked_cash"]) > .02:
+    if abs(cash - state["tracked_cash"]) > CASH_DRIFT_TOLERANCE:
         raise SafetyError("Unexplained cash change; suspend")
     if open_orders:
         raise SafetyError("Open orders exist; no additional exposure")

@@ -13,7 +13,8 @@ import sys
 from .alpaca import ExecutionPaper, ReadOnlyPaper, SafetyError
 from .config import SYMBOLS
 from .risk import account_values, number
-from .runner import account_hash, cycle, probe
+from .runner import (FILL_CASH_RECONCILIATION_TOLERANCE, account_hash,
+                     cycle, probe)
 from .state import append_event, atomic_json, code_hash, load, now
 
 
@@ -25,6 +26,7 @@ CANARY_UPGRADE_PREDECESSORS = frozenset({
     "31e357916a0bbb7df545fc07ff8296952474e5ba5c981ee5d8d17288f7440504",
     "b7054287c2e3e95fc203cca0adefbda0f2c7c50f93ece7c7632c693afdcf9a64",
     "6d9ecb3f89806d288c967d9e12af869d25db314591cc50d8768661a08c5e7ee1",
+    "85e176052881d5cba7272c8fec25eadbd5e921509e7cc8c7bff5c53314a0fb93",
 })
 
 
@@ -95,6 +97,7 @@ def migrate_canary(client, directory, main_directory):
     previous = proof.get("code_sha256")
     state = deepcopy(state)
     reconciled = None
+    cash_rounding_adjustment = 0.0
     try:
         age = datetime.now(timezone.utc) - datetime.fromisoformat(proof["at"])
         observed = {p["symbol"]: Decimal(str(p["qty"])) for p in positions}
@@ -149,6 +152,7 @@ def migrate_canary(client, directory, main_directory):
                       "client_id": client_id, "status": order["status"],
                       "filled_qty": float(filled),
                       "filled_avg_price": order.get("filled_avg_price")}
+    cash_rounding_adjustment = cash - tracked_cash
     if (previous not in CANARY_UPGRADE_PREDECESSORS or previous == code_hash() or
             not timedelta(0) <= age <= timedelta(days=7) or
             not proof.get("safety_tests_passed") or not proof.get("connection_passed") or
@@ -159,7 +163,7 @@ def migrate_canary(client, directory, main_directory):
             proof.get("strategy") != CANARY_STRATEGY or
             proof.get("performance_evidence") is not False or
             state.get("pending") is not None or open_orders or observed != tracked or
-            abs(cash - tracked_cash) > .02):
+            abs(cash_rounding_adjustment) > FILL_CASH_RECONCILIATION_TOLERANCE):
         raise SafetyError("Canary migration state or predecessor mismatch")
     for value in (*observed.values(), *tracked.values()):
         if not value.is_finite() or value <= 0:
@@ -170,9 +174,17 @@ def migrate_canary(client, directory, main_directory):
             raise SafetyError("Canary asset eligibility changed")
     proof.update(schema=2, at=now(), code_sha256=code_hash(), migrated_from=previous,
                  renewal="reviewed_code_upgrade_same_account_reconciled_read_only")
-    if reconciled:
+    if cash_rounding_adjustment:
+        state["tracked_cash"] = cash
+    if reconciled or cash_rounding_adjustment:
         atomic_json(directory / "state.json", state)
+    if reconciled:
         append_event(directory, reconciled)
+    if cash_rounding_adjustment:
+        append_event(directory, {
+            "event": "cash_rounding_reconciled", "source": "canary_migration",
+            "adjustment": cash_rounding_adjustment,
+        })
     atomic_json(directory / PROOF_FILE, proof)
     return proof
 
