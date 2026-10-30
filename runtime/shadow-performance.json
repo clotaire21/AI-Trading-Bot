@@ -2,7 +2,7 @@
   "schema": 3,
   "mode": "forward_shadow_no_orders",
   "bar": "2026-10-29 19:00:00+00:00",
-  "code_sha256": "dc139bbd700ad0372d7956b564e3d6d99af430648b00c48a9ef76aa5c3cfeb06",
+  "code_sha256": "3af3da87c60ff8917d39faf7bde49a48204441c32a500b2c8cc7793b801e4774",
   "capital_per_strategy_usd": 2000.0,
   "strategies": {
     "trend_6_24": {
