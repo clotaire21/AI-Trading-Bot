@@ -1,8 +1,8 @@
 {
   "account_hash": "ccc88de6d470ba921ed8bfe4169eb64dd8325f541ee46755fd85ee0961d92b15",
   "peak": 2005.553879597454,
-  "day": "2026-10-29",
-  "day_start": 2004.563879597454,
+  "day": "2026-10-30",
+  "day_start": 2002.053879597454,
   "daily_halt": false,
   "halted": false,
   "orders_today": 1,
@@ -12,7 +12,14 @@
     "QQQ": "2026-10-27 17:00:00+00:00"
   },
   "last_bar": "2026-10-28 18:00:00+00:00",
-  "pending": null,
+  "pending": {
+    "symbol": "QQQ",
+    "side": "sell",
+    "qty": "0.549023000",
+    "limit_price": "683.26",
+    "client_id": "lab-ee1f9c427f40c73575904ff9f8ced15e",
+    "bar": "risk-watch"
+  },
   "benchmark_start": 765.95,
   "initial_equity": 2000.0,
   "modeled_cost": 1.5897443947960002,
@@ -21,8 +28,8 @@
     "SPY": "0.513352"
   },
   "tracked_cash": 1217.46,
-  "last_equity": 2002.053879597454,
-  "max_drawdown": -0.0017451538129219513,
+  "last_equity": 1976.800255605204,
+  "max_drawdown": -0.014336999012971474,
   "entries_enabled": false,
   "drain_complete": false
 }
