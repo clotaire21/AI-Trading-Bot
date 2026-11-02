@@ -27,9 +27,24 @@ class StateStoreTests(unittest.TestCase):
             def state(action, cwd):
                 subprocess.run(["bash", script, action], cwd=cwd, check=True, capture_output=True, text=True)
             state("prepare", source)
+            # A transient GitHub 5xx must retry, while state conflicts and all
+            # other push failures remain fail-closed. Simulate one server 5xx.
+            hook = root / "remote.git" / "hooks" / "pre-receive"
+            marker = root / "transient-failure-seen"
+            hook.write_text(
+                "#!/usr/bin/env bash\n"
+                "read -r old new ref\n"
+                f"if [ \"$ref\" = refs/heads/bot-state ] && [ ! -e {marker} ]; then\n"
+                f"  touch {marker}\n"
+                "  echo 'Internal Server Error' >&2\n"
+                "  exit 1\n"
+                "fi\n"
+            )
+            hook.chmod(0o755)
             (source / "runtime-state/runtime/state.json").write_text('{"paper": true}')
             (source / "runtime-state/canary/canary-validation.json").write_text('{"separate": true}')
             state("save", source)
+            self.assertTrue(marker.exists())
             self.assertEqual(git("rev-parse", "HEAD", cwd=source), before)
             self.assertEqual((source / "README.md").read_text(), "source\n")
             second = root / "second"
