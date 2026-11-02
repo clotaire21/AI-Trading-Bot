@@ -10,7 +10,8 @@ on:
   schedule:
     # GitHub documents that jobs near the start of an hour are more likely to
     # be delayed or dropped. Use New York time to avoid DST conversion errors.
-    - cron: '23 10-16 * * 1-5'
+    # Changing the minute also re-registers a schedule that stopped firing.
+    - cron: '26 10-16 * * 1-5'
       timezone: 'America/New_York'
 permissions:
   contents: write

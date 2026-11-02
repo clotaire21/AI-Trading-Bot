@@ -3,8 +3,9 @@ on:
   workflow_dispatch:
   schedule:
     # Independent quarter-hour checks reduce exposure to a delayed/dropped
-    # hourly strategy run. The odd minutes avoid GitHub's busiest boundary.
-    - cron: '13,28,43,58 9-15 * * 1-5'
+    # hourly strategy run. The odd minutes avoid GitHub's busiest boundary and
+    # changing them re-registers a schedule that stopped firing.
+    - cron: '11,26,41,56 9-15 * * 1-5'
       timezone: 'America/New_York'
 permissions:
   contents: write
