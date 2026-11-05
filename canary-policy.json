@@ -1,7 +1,9 @@
 {
   "mode": "operational_canary_only",
   "orders_enabled": true,
-  "entries_enabled": false,
-  "strategy": "trend_6_24",
-  "reason": "Validated second-account Alpaca Paper execution plumbing only. It is not investment evidence and cannot authorize the main account."
+  "entries_enabled": true,
+  "strategy": "trend_pullback_rsi_stoch",
+  "position_fraction": 0.1,
+  "exposure_fraction": 0.3,
+  "reason": "Reviewed V2 PAPER canary only: 10% per position, 30% total exposure. Main account remains shadow-only."
 }

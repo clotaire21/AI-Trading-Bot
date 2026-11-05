@@ -5,6 +5,7 @@ unvalidated code, a failed research gate or kill switch all fail closed.
 """
 from __future__ import annotations
 import hashlib
+import math
 import os
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -74,11 +75,29 @@ def execution_gate(directory, policy, account):
         raise SafetyError("Research gate failed")
 
 
-def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_only=False):
+def _risk_fractions(policy):
+    try:
+        position = float(policy.get("position_fraction", LIMITS.position))
+        exposure = float(policy.get("exposure_fraction", LIMITS.exposure))
+    except (TypeError, ValueError):
+        raise SafetyError("Invalid risk policy") from None
+    if (not math.isfinite(position) or not math.isfinite(exposure) or
+            not 0 < position <= LIMITS.position or
+            not position <= exposure <= LIMITS.exposure):
+        raise SafetyError("Invalid risk policy")
+    return position, exposure
+
+
+def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_only=False,
+          allowed_strategies=STRATEGIES):
     directory = Path(directory)
     entries_enabled = policy.get("entries_enabled", True)
     if not isinstance(entries_enabled, bool):
         raise SafetyError("Invalid entry policy")
+    strategy = policy.get("strategy") or "trend_6_24"
+    if strategy not in allowed_strategies:
+        raise SafetyError("Unknown strategy")
+    position_fraction, exposure_fraction = _risk_fractions(policy)
     account, clock = client.account(), client.clock()
     positions, open_orders = client.positions(), client.orders()
     cash, equity, gross = account_values(account, positions)
@@ -185,7 +204,7 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_on
     if risk_only:
         by_symbol = {p["symbol"]: p for p in positions}
         budget_equity = min(LIMITS.capital, risk_equity)
-        portfolio_over = gross > budget_equity * LIMITS.exposure + 1
+        portfolio_over = gross > budget_equity * exposure_fraction + 1
         candidates, checks = [], []
         for symbol in SYMBOLS:
             position = by_symbol.get(symbol)
@@ -193,7 +212,7 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_on
                 continue
             current = number(position["current_price"])
             stop = current <= number(position["avg_entry_price"]) * (1 - LIMITS.stop_loss)
-            over = portfolio_over or number(position["market_value"]) > budget_equity * LIMITS.position + 1
+            over = portfolio_over or number(position["market_value"]) > budget_equity * position_fraction + 1
             exit_required = state["halted"] or state["daily_halt"] or stop or over
             checks.append({"symbol": symbol, "current_price": current,
                            "stop": stop, "position_cap": over,
@@ -242,12 +261,9 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_on
     bar = str(latest)
     if state["last_bar"] and pd.Timestamp(state["last_bar"]) > latest:
         raise SafetyError("Signal time moved backwards")
-    strategy = policy.get("strategy") or "trend_6_24"
-    if strategy not in STRATEGIES:
-        raise SafetyError("Unknown strategy")
     by_symbol = {p["symbol"]: p for p in positions}
     budget_equity = min(LIMITS.capital, risk_equity)
-    portfolio_over = gross > budget_equity * LIMITS.exposure + 1
+    portfolio_over = gross > budget_equity * exposure_fraction + 1
     decisions, candidates = [], []
     for s in SYMBOLS:
         p = by_symbol.get(s)
@@ -259,7 +275,7 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_on
                 raise SafetyError("Position missing entry journal")
             held = sum(index > pd.Timestamp(state["entries"][s]))
             stop = number(p["current_price"]) <= number(p["avg_entry_price"]) * (1 - LIMITS.stop_loss)
-            over = portfolio_over or number(p["market_value"]) > budget_equity * LIMITS.position + 1
+            over = portfolio_over or number(p["market_value"]) > budget_equity * position_fraction + 1
             if state["halted"] or state["daily_halt"] or stop or over or held >= LIMITS.max_hold_bars or bool(signal.exit):
                 reason = "risk_exit" if state["halted"] or state["daily_halt"] or stop or over else "time_or_signal_exit"
                 order = make_order(s, "sell", price, p["qty"], bar, state["account_hash"], strategy)
@@ -270,7 +286,7 @@ def cycle(client, directory, policy, execute=False, gate=execution_gate, risk_on
             if (entries_enabled and not (state["halted"] or state["daily_halt"]) and
                     state["orders_today"] < LIMITS.max_orders_day):
                 # Reserve 1% extra against fees/rounding; never use buying_power.
-                budget = min(budget_equity * LIMITS.position, budget_equity * LIMITS.exposure - gross,
+                budget = min(budget_equity * position_fraction, budget_equity * exposure_fraction - gross,
                              cash - budget_equity * LIMITS.reserve) * .99
                 if budget >= 5:
                     order = make_order(s, "buy", price, budget, bar, state["account_hash"], strategy)

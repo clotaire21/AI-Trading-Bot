@@ -54,7 +54,8 @@ def signals(frame, strategy):
     elif strategy == "trend_pullback_rsi_stoch":
         # Forward-only swing hypothesis: the slower 24/72-hour regime decides
         # direction, while RSI and stochastic only time a pullback entry. This
-        # candidate is deliberately unavailable to either execution policy.
+        # candidate is unavailable to the main execution policy; only the
+        # separately attested PAPER canary may explicitly opt in.
         delta = close.diff()
         gain = delta.clip(lower=0).ewm(alpha=1 / 14, adjust=False, min_periods=14).mean()
         loss = (-delta.clip(upper=0)).ewm(alpha=1 / 14, adjust=False, min_periods=14).mean()
