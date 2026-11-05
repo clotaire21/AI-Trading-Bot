@@ -5,7 +5,7 @@ on:
       command:
         description: 'preflight reads only; validate includes research; paper remains policy-gated'
         type: choice
-        options: [preflight, research, audit, validate, shadow, shadow-migrate, paper, canary-preflight, canary-validate, canary-migrate, canary-paper]
+        options: [preflight, research, audit, validate, shadow, shadow-migrate, paper, canary-preflight, canary-validate, canary-migrate, canary-activate-v2, canary-paper]
         default: preflight
   schedule:
     # GitHub documents that jobs near the start of an hour are more likely to
@@ -91,6 +91,10 @@ jobs:
             canary-migrate)
               python -m bot probe --state-dir runtime-state/runtime
               run_canary python -m bot canary-migrate --state-dir runtime-state/canary --main-state-dir runtime-state/runtime
+              ;;
+            canary-activate-v2)
+              python -m bot probe --state-dir runtime-state/runtime
+              run_canary python -m bot canary-activate-v2 --state-dir runtime-state/canary --main-state-dir runtime-state/runtime
               ;;
             canary-paper)
               run_canary python -m bot canary-paper --state-dir runtime-state/canary
