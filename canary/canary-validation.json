@@ -1,6 +1,6 @@
 {
   "schema": 3,
-  "at": "2026-11-05T16:46:56.410742+00:00",
+  "at": "2026-11-05T16:48:12.943020+00:00",
   "initial_validated_at": "2026-10-26T11:10:12.412369+00:00",
   "code_sha256": "fe529b43c45b02c1c063d26a4b6c7361d5e6055ec595690586e0ffa6752b1139",
   "safety_tests_passed": true,
@@ -10,7 +10,7 @@
   "mode": "operational_canary_only",
   "strategy": "trend_pullback_rsi_stoch",
   "performance_evidence": false,
-  "renewal": "reviewed_flat_canary_v2_activation",
+  "renewal": "same_code_same_second_account_fresh_tests_read_only",
   "migrated_from": "7f800f945ceb7c5ef767a554f895012f28b21d956849399206369c1d8c5d5f3c",
   "position_fraction": 0.1,
   "exposure_fraction": 0.3
