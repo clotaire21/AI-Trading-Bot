@@ -13,14 +13,21 @@ import sys
 from .alpaca import ExecutionPaper, ReadOnlyPaper, SafetyError
 from .config import SYMBOLS
 from .risk import account_values, number
-from .runner import (FILL_CASH_RECONCILIATION_TOLERANCE,
+from .runner import (CASH_DRIFT_TOLERANCE,
+                     FILL_CASH_RECONCILIATION_TOLERANCE,
                      SELL_CASH_RECONCILIATION_TOLERANCE, account_hash,
                      cycle, probe)
 from .state import append_event, atomic_json, code_hash, load, now
 
 
 PROOF_FILE = "canary-validation.json"
-CANARY_STRATEGY = "trend_6_24"
+LEGACY_CANARY_STRATEGY = "trend_6_24"
+CANARY_STRATEGY = "trend_pullback_rsi_stoch"
+CANARY_POSITION_FRACTION = 0.10
+CANARY_EXPOSURE_FRACTION = 0.30
+CANARY_V2_ACTIVATION_PREDECESSORS = frozenset({
+    "7f800f945ceb7c5ef767a554f895012f28b21d956849399206369c1d8c5d5f3c",
+})
 # Explicit one-time path from the validated executor currently holding the
 # canary position. A later code change must name its own reviewed predecessor.
 CANARY_UPGRADE_PREDECESSORS = frozenset({
@@ -69,7 +76,7 @@ def renew_canary(client, directory):
             not proof.get("safety_tests_passed") or
             not proof.get("connection_passed") or
             proof.get("mode") != "operational_canary_only" or
-            proof.get("strategy") != CANARY_STRATEGY or
+            proof.get("strategy") not in (LEGACY_CANARY_STRATEGY, CANARY_STRATEGY) or
             proof.get("performance_evidence") is not False or
             proof.get("account_hash") != identity or
             proof.get("main_account_hash") == identity or
@@ -162,7 +169,7 @@ def migrate_canary(client, directory, main_directory):
             proof.get("main_account_hash") != main.get("account_hash") or
             proof.get("main_account_hash") == identity or
             proof.get("mode") != "operational_canary_only" or
-            proof.get("strategy") != CANARY_STRATEGY or
+            proof.get("strategy") not in (LEGACY_CANARY_STRATEGY, CANARY_STRATEGY) or
             proof.get("performance_evidence") is not False or
             state.get("pending") is not None or open_orders or observed != tracked or
             not (-SELL_CASH_RECONCILIATION_TOLERANCE <= cash_rounding_adjustment <=
@@ -192,13 +199,79 @@ def migrate_canary(client, directory, main_directory):
     return proof
 
 
+def activate_canary_v2(client, directory, main_directory):
+    """Activate the reviewed V2 strategy only on a flat, drained PAPER canary."""
+    if type(client) is not ReadOnlyPaper:
+        raise SafetyError("Canary V2 activation requires the read-only broker client")
+    directory, main_directory = Path(directory), Path(main_directory)
+    proof = load(directory / PROOF_FILE)
+    state = load(directory / "state.json")
+    main = load(main_directory / "connection.json")
+    account, positions, open_orders = client.account(), client.positions(), client.orders()
+    cash, equity, _ = account_values(account, positions)
+    identity = account_hash(account)
+    previous = proof.get("code_sha256")
+    try:
+        age = datetime.now(timezone.utc) - datetime.fromisoformat(proof["at"])
+        tracked_cash = number(state["tracked_cash"])
+    except (KeyError, TypeError, ValueError):
+        raise SafetyError("Invalid canary V2 activation evidence") from None
+    if (previous not in CANARY_V2_ACTIVATION_PREDECESSORS or previous == code_hash() or
+            not timedelta(0) <= age <= timedelta(days=7) or
+            positions or open_orders or state.get("pending") is not None or
+            state.get("tracked_quantities") != {} or
+            state.get("entries_enabled") is not False or
+            state.get("drain_complete") is not True or
+            abs(cash - tracked_cash) > CASH_DRIFT_TOLERANCE or
+            proof.get("safety_tests_passed") is not True or
+            proof.get("connection_passed") is not True or
+            proof.get("account_hash") != identity or state.get("account_hash") != identity or
+            proof.get("main_account_hash") != main.get("account_hash") or
+            proof.get("main_account_hash") == identity or
+            proof.get("mode") != "operational_canary_only" or
+            proof.get("strategy") != LEGACY_CANARY_STRATEGY or
+            proof.get("performance_evidence") is not False):
+        raise SafetyError("Canary V2 activation state or predecessor mismatch")
+    for symbol in SYMBOLS:
+        asset = client.asset(symbol)
+        if not (asset.get("tradable") and asset.get("fractionable") and
+                asset.get("status") == "active"):
+            raise SafetyError("Canary asset eligibility changed")
+    activated = {
+        "account_hash": identity, "peak": equity, "day": None,
+        "day_start": equity, "daily_halt": False, "halted": False,
+        "orders_today": 0, "entries": {}, "last_bar": None, "pending": None,
+        "benchmark_start": None, "initial_equity": equity, "modeled_cost": 0.0,
+        "tracked_quantities": {}, "tracked_cash": cash, "last_equity": equity,
+        "max_drawdown": 0.0, "entries_enabled": True, "drain_complete": False,
+        "strategy": CANARY_STRATEGY,
+    }
+    proof.update(
+        schema=3, at=now(), code_sha256=code_hash(), strategy=CANARY_STRATEGY,
+        migrated_from=previous, renewal="reviewed_flat_canary_v2_activation",
+        position_fraction=CANARY_POSITION_FRACTION,
+        exposure_fraction=CANARY_EXPOSURE_FRACTION,
+    )
+    atomic_json(directory / "state.json", activated)
+    atomic_json(directory / PROOF_FILE, proof)
+    append_event(directory, {
+        "event": "canary_v2_activated", "from_strategy": LEGACY_CANARY_STRATEGY,
+        "strategy": CANARY_STRATEGY, "baseline_equity_usd": equity,
+        "position_fraction": CANARY_POSITION_FRACTION,
+        "exposure_fraction": CANARY_EXPOSURE_FRACTION,
+    })
+    return proof
+
+
 def canary_gate(directory, policy, account):
     if os.environ.get("CANARY_KILL_SWITCH", "true") != "false":
         raise SafetyError("Canary kill switch is on (default)")
     if (policy.get("mode") != "operational_canary_only" or
             not policy.get("orders_enabled") or
             not isinstance(policy.get("entries_enabled"), bool) or
-            policy.get("strategy") != CANARY_STRATEGY):
+            policy.get("strategy") != CANARY_STRATEGY or
+            policy.get("position_fraction") != CANARY_POSITION_FRACTION or
+            policy.get("exposure_fraction") != CANARY_EXPOSURE_FRACTION):
         raise SafetyError("Canary order policy disabled")
     try:
         proof = load(Path(directory) / PROOF_FILE)
@@ -223,4 +296,4 @@ def canary_cycle(client, directory, policy, risk_only=False):
     if type(client) is not ExecutionPaper:
         raise SafetyError("Canary execution requires the PAPER execution client")
     return cycle(client, directory, policy, execute=True, gate=canary_gate,
-                 risk_only=risk_only)
+                 risk_only=risk_only, allowed_strategies=(CANARY_STRATEGY,))
