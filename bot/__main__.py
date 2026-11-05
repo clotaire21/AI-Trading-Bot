@@ -7,7 +7,8 @@ import subprocess
 import sys
 from .alpaca import ReadOnlyPaper, ExecutionPaper, SafetyError
 from .audit import run_locked_audit
-from .canary import canary_cycle, migrate_canary, renew_canary, validate_canary
+from .canary import (activate_canary_v2, canary_cycle, migrate_canary,
+                     renew_canary, validate_canary)
 from .data import frames_from_bars, align_research
 from .research import compare, write_report
 from .runner import probe, cycle
@@ -20,7 +21,8 @@ def main():
     parser = argparse.ArgumentParser(description="Paper-only research lab; orders disabled by default")
     parser.add_argument("command", choices=(
         "probe", "research", "audit", "validate", "renew", "selfcheck", "shadow", "shadow-migrate", "paper",
-        "canary-probe", "canary-validate", "canary-migrate", "canary-paper", "canary-risk",
+        "canary-probe", "canary-validate", "canary-migrate", "canary-activate-v2",
+        "canary-paper", "canary-risk",
     ))
     parser.add_argument("--state-dir", default="runtime")
     parser.add_argument("--input", help="Replay a saved Alpaca bar JSON for offline research")
@@ -90,6 +92,10 @@ def main():
         elif args.command == "canary-migrate":
             subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], check=True)
             proof = migrate_canary(ReadOnlyPaper(), directory, args.main_state_dir)
+            print(json.dumps(proof, indent=2))
+        elif args.command == "canary-activate-v2":
+            subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], check=True)
+            proof = activate_canary_v2(ReadOnlyPaper(), directory, args.main_state_dir)
             print(json.dumps(proof, indent=2))
         elif args.command in ("canary-paper", "canary-risk"):
             client = ExecutionPaper()
