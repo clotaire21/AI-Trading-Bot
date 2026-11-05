@@ -8,8 +8,12 @@ from unittest.mock import Mock, patch
 
 from bot.alpaca import ExecutionPaper, ReadOnlyPaper, SafetyError
 from bot.audit import evaluate, run_locked_audit
-from bot.canary import (CANARY_UPGRADE_PREDECESSORS, canary_cycle, canary_gate,
-                        migrate_canary, validate_canary)
+from bot.canary import (
+    CANARY_EXPOSURE_FRACTION, CANARY_POSITION_FRACTION, CANARY_STRATEGY,
+    CANARY_UPGRADE_PREDECESSORS, CANARY_V2_ACTIVATION_PREDECESSORS,
+    LEGACY_CANARY_STRATEGY, activate_canary_v2, canary_cycle, canary_gate,
+    migrate_canary, validate_canary,
+)
 from bot.runner import account_hash
 from bot.state import atomic_json, code_hash, load
 from helpers import account, frames, raw_bars
@@ -66,13 +70,16 @@ class CanaryTests(unittest.TestCase):
             client, account_data = self.client()
             proof = validate_canary(client, canary, main)
             self.assertFalse(proof["performance_evidence"])
-            disabled = {"mode": "operational_canary_only", "orders_enabled": False,
-                        "strategy": "trend_6_24"}
+            disabled = {
+                "mode": "operational_canary_only", "orders_enabled": False,
+                "entries_enabled": True, "strategy": CANARY_STRATEGY,
+                "position_fraction": CANARY_POSITION_FRACTION,
+                "exposure_fraction": CANARY_EXPOSURE_FRACTION,
+            }
             with patch.dict(os.environ, {"CANARY_KILL_SWITCH": "false"}), \
                     self.assertRaisesRegex(SafetyError, "policy disabled"):
                 canary_gate(canary, disabled, account_data)
             enabled = {**disabled, "orders_enabled": True}
-            enabled["entries_enabled"] = True
             with patch.dict(os.environ, {"CANARY_KILL_SWITCH": "false"}):
                 canary_gate(canary, enabled, account_data)
             drain = {**enabled, "entries_enabled": False}
@@ -85,6 +92,39 @@ class CanaryTests(unittest.TestCase):
     def test_canary_execution_rejects_read_only_client(self):
         with self.assertRaisesRegex(SafetyError, "PAPER execution"):
             canary_cycle(Mock(spec=ReadOnlyPaper), "unused", {})
+
+    def test_reviewed_flat_canary_can_activate_v2_with_reduced_risk(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root)
+            main, canary = root / "runtime", root / "canary"
+            client, account_data = self.client()
+            account_data.update(cash="1979.72", equity="1979.72")
+            identity = account_hash(account_data)
+            main_hash = "a" * 64
+            previous = next(iter(CANARY_V2_ACTIVATION_PREDECESSORS))
+            atomic_json(main / "connection.json", {"account_hash": main_hash})
+            atomic_json(canary / "state.json", {
+                "account_hash": identity, "tracked_quantities": {},
+                "tracked_cash": 1979.72, "pending": None,
+                "entries_enabled": False, "drain_complete": True,
+            })
+            atomic_json(canary / "canary-validation.json", {
+                "schema": 2, "at": datetime.now(timezone.utc).isoformat(),
+                "code_sha256": previous, "safety_tests_passed": True,
+                "connection_passed": True, "account_hash": identity,
+                "main_account_hash": main_hash, "mode": "operational_canary_only",
+                "strategy": LEGACY_CANARY_STRATEGY, "performance_evidence": False,
+            })
+            proof = activate_canary_v2(client, canary, main)
+            state = load(canary / "state.json")
+            self.assertEqual(proof["strategy"], CANARY_STRATEGY)
+            self.assertEqual(proof["position_fraction"], 0.10)
+            self.assertEqual(proof["exposure_fraction"], 0.30)
+            self.assertTrue(state["entries_enabled"])
+            self.assertFalse(state["drain_complete"])
+            self.assertEqual(state["initial_equity"], 1979.72)
+            self.assertEqual(state["tracked_quantities"], {})
+            self.assertIn("canary_v2_activated", (canary / "journal.jsonl").read_text())
 
     def test_used_canary_migrates_only_from_reviewed_reconciled_predecessor(self):
         with tempfile.TemporaryDirectory() as root:
