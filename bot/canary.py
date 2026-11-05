@@ -252,14 +252,16 @@ def activate_canary_v2(client, directory, main_directory):
         position_fraction=CANARY_POSITION_FRACTION,
         exposure_fraction=CANARY_EXPOSURE_FRACTION,
     )
-    atomic_json(directory / "state.json", activated)
-    atomic_json(directory / PROOF_FILE, proof)
+    # Journal the reviewed intent before enabling any order path. If the
+    # integrity chain is corrupt, activation fails before state can change.
     append_event(directory, {
         "event": "canary_v2_activated", "from_strategy": LEGACY_CANARY_STRATEGY,
         "strategy": CANARY_STRATEGY, "baseline_equity_usd": equity,
         "position_fraction": CANARY_POSITION_FRACTION,
         "exposure_fraction": CANARY_EXPOSURE_FRACTION,
     })
+    atomic_json(directory / "state.json", activated)
+    atomic_json(directory / PROOF_FILE, proof)
     return proof
 
 
