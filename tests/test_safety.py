@@ -8,7 +8,7 @@ from unittest.mock import patch, Mock, MagicMock
 from bot.alpaca import ReadOnlyPaper, ExecutionPaper, SafetyError, NoRedirect
 from bot.config import PAPER_URL, DATA_URL
 from bot.risk import account_values, make_order, Order
-from bot.runner import probe, execution_gate, cycle
+from bot.runner import _risk_fractions, probe, execution_gate, cycle
 from bot.state import append_event, code_hash, atomic_json
 from helpers import account, frames, raw_bars
 
@@ -166,6 +166,26 @@ class RiskSafety(unittest.TestCase):
             with self.assertRaises(SafetyError): execution_gate(directory, {"orders_enabled": False}, account())
             with patch.dict(os.environ, {"PAPER_KILL_SWITCH": "false"}), self.assertRaises(SafetyError):
                 execution_gate(directory, {"orders_enabled": True, "strategy": "trend_6_24"}, account())
+
+    def test_main_execution_still_rejects_shadow_only_v2(self):
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.dict(os.environ, {"PAPER_KILL_SWITCH": "false"}), \
+                self.assertRaisesRegex(SafetyError, "policy disabled"):
+            execution_gate(directory, {
+                "orders_enabled": True, "strategy": "trend_pullback_rsi_stoch",
+            }, account())
+
+    def test_policy_can_only_reduce_global_position_and_exposure_caps(self):
+        self.assertEqual(_risk_fractions({
+            "position_fraction": 0.1, "exposure_fraction": 0.3,
+        }), (0.1, 0.3))
+        for policy in (
+            {"position_fraction": 0.21, "exposure_fraction": 0.3},
+            {"position_fraction": 0.1, "exposure_fraction": 0.61},
+            {"position_fraction": 0.2, "exposure_fraction": 0.1},
+        ):
+            with self.assertRaisesRegex(SafetyError, "Invalid risk policy"):
+                _risk_fractions(policy)
 
     def test_journal_detects_corruption(self):
         with tempfile.TemporaryDirectory() as directory:
