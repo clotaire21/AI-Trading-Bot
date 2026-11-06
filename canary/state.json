@@ -5,12 +5,19 @@
   "day_start": 1979.72,
   "daily_halt": false,
   "halted": false,
-  "orders_today": 0,
+  "orders_today": 1,
   "entries": {
     "IWM": "2026-11-05 15:00:00+00:00"
   },
-  "last_bar": "2026-11-05 15:00:00+00:00",
-  "pending": null,
+  "last_bar": "2026-11-06 19:00:00+00:00",
+  "pending": {
+    "symbol": "IWM",
+    "side": "sell",
+    "qty": "0.709911000",
+    "limit_price": "273.87",
+    "client_id": "lab-891a7f460cc5ecd8d21e0e71b31c7743",
+    "bar": "2026-11-06 19:00:00+00:00"
+  },
   "benchmark_start": 741.91,
   "initial_equity": 1979.72,
   "modeled_cost": 0.194995513836,
@@ -18,8 +25,8 @@
     "IWM": "0.709911"
   },
   "tracked_cash": 1784.71,
-  "last_equity": 1979.105004486164,
-  "max_drawdown": -0.00031064772484790115,
+  "last_equity": 1978.795004486164,
+  "max_drawdown": -0.0004672355251429394,
   "entries_enabled": true,
   "drain_complete": false,
   "strategy": "trend_pullback_rsi_stoch"

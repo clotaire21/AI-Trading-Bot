@@ -1,18 +1,18 @@
 {
   "event": "decision",
-  "bar": "2026-11-05 15:00:00+00:00",
+  "bar": "2026-11-06 19:00:00+00:00",
   "strategy": "trend_pullback_rsi_stoch",
   "entries_enabled": true,
-  "equity_usd": 1979.72,
-  "net_modeled_equity_usd": 1979.72,
-  "return_pct": -1.0140000000000038,
-  "net_return_pct": -1.0140000000000038,
-  "spy_return_pct": 0.0,
-  "max_drawdown_pct": 0.0,
-  "benchmark_timestamp": "2026-11-05 15:00:00+00:00",
-  "account_timestamp": "2026-11-05T11:48:12.990984464-05:00",
-  "spy_price_benchmark_usd": 2000.0,
-  "cash_usd": 1979.72,
+  "equity_usd": 1978.99,
+  "net_modeled_equity_usd": 1978.795004486164,
+  "return_pct": -1.0504999999999987,
+  "net_return_pct": -1.0602497756917906,
+  "spy_return_pct": -0.5229744847757734,
+  "max_drawdown_pct": -0.04672355251429394,
+  "benchmark_timestamp": "2026-11-06 19:00:00+00:00",
+  "account_timestamp": "2026-11-06T15:57:38.574747901-05:00",
+  "spy_price_benchmark_usd": 1989.5405103044845,
+  "cash_usd": 1784.71,
   "halted": false,
   "daily_halt": false,
   "execute": true,
@@ -23,21 +23,21 @@
       "reason": "no_signal",
       "enter": false,
       "exit": true,
-      "reference_price": 741.91
+      "reference_price": 738.03
     },
     {
       "symbol": "QQQ",
       "reason": "no_signal",
       "enter": false,
       "exit": true,
-      "reference_price": 653.3
+      "reference_price": 659.27
     },
     {
       "symbol": "IWM",
-      "reason": "entry",
-      "enter": true,
-      "exit": false,
-      "reference_price": 275.8
+      "reason": "time_or_signal_exit",
+      "enter": false,
+      "exit": true,
+      "reference_price": 274.15
     }
   ]
 }
