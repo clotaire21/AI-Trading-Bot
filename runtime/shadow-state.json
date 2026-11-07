@@ -3,7 +3,7 @@
   "created_at": "2026-10-26T20:26:12.423045+00:00",
   "account_hash": "67b6b0fef12f5bdf131a206fcef3d65035e9dd24d3b053ef72a88823ffccd0b1",
   "code_sha256": "fe529b43c45b02c1c063d26a4b6c7361d5e6055ec595690586e0ffa6752b1139",
-  "last_bar": "2026-11-06 19:00:00+00:00",
+  "last_bar": "2026-11-06 20:00:00+00:00",
   "strategies": {
     "trend_6_24": {
       "started_at": "2026-10-26 19:00:00+00:00",
@@ -46,22 +46,22 @@
     "reversion_20": {
       "started_at": "2026-10-26 19:00:00+00:00",
       "cash": 821.0198105782351,
-      "equity": 2010.6978293034726,
+      "equity": 2006.6981192605874,
       "positions": {
         "SPY": {
           "qty": 0.5330876701732543,
           "entry": 742.76789,
-          "bars_held": 9
+          "bars_held": 10
         },
         "QQQ": {
           "qty": 0.6020000913574862,
           "entry": 657.7414349999999,
-          "bars_held": 8
+          "bars_held": 9
         },
         "IWM": {
           "qty": 1.4567307141273782,
           "entry": 271.81441299999994,
-          "bars_held": 7
+          "bars_held": 8
         }
       },
       "pending": null,
