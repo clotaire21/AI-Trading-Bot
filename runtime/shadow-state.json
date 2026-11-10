@@ -3,76 +3,66 @@
   "created_at": "2026-10-26T20:26:12.423045+00:00",
   "account_hash": "67b6b0fef12f5bdf131a206fcef3d65035e9dd24d3b053ef72a88823ffccd0b1",
   "code_sha256": "fe529b43c45b02c1c063d26a4b6c7361d5e6055ec595690586e0ffa6752b1139",
-  "last_bar": "2026-11-09 20:00:00+00:00",
+  "last_bar": "2026-11-10 20:00:00+00:00",
   "strategies": {
     "trend_6_24": {
       "started_at": "2026-10-26 19:00:00+00:00",
-      "cash": 1165.6668122793453,
-      "equity": 1929.090810808404,
+      "cash": 784.3894553593805,
+      "equity": 1922.3349169274284,
       "positions": {
         "IWM": {
           "qty": 1.3523613084618533,
           "entry": 282.5690835,
-          "bars_held": 1
+          "bars_held": 7
         },
         "SPY": {
           "qty": 0.5066896754459425,
           "entry": 754.4884289999999,
-          "bars_held": 0
+          "bars_held": 6
+        },
+        "QQQ": {
+          "qty": 0.5609171887801866,
+          "entry": 679.6711539999999,
+          "bars_held": 5
         }
       },
-      "pending": {
-        "symbol": "QQQ",
-        "side": "buy",
-        "reason": "signal_entry",
-        "signal_bar": "2026-11-09 20:00:00+00:00"
-      },
+      "pending": null,
       "peak": 2003.331365475351,
-      "max_drawdown": -0.03705854954720944,
-      "day": "2026-11-09",
-      "day_start": 1930.1702476892722,
+      "max_drawdown": -0.044115040793397675,
+      "day": "2026-11-10",
+      "day_start": 1929.090810808404,
       "daily_halt": false,
       "halted": false,
-      "orders_today": 2,
-      "sessions": 10,
-      "fills": 16,
+      "orders_today": 1,
+      "sessions": 11,
+      "fills": 17,
       "round_trips": 7,
-      "modeled_cost": 6.216187411147545,
+      "modeled_cost": 6.597118118038946,
       "spy_start": 765.225
     },
     "breakout_12": {
       "started_at": "2026-10-26 19:00:00+00:00",
-      "cash": 806.1388493219133,
-      "equity": 1985.4976992591708,
+      "cash": 1581.1184362296572,
+      "equity": 1972.2022668567677,
       "positions": {
-        "QQQ": {
-          "qty": 0.578745388904552,
-          "entry": 678.8904519999999,
-          "bars_held": 4
-        },
-        "IWM": {
-          "qty": 1.3946866934634532,
-          "entry": 281.533152,
-          "bars_held": 3
-        },
         "SPY": {
           "qty": 0.5214937802556379,
           "entry": 753.1322094999999,
-          "bars_held": 2
+          "bars_held": 8
         }
       },
       "pending": null,
       "peak": 2000.0,
-      "max_drawdown": -0.008330138696943545,
-      "day": "2026-11-09",
-      "day_start": 1984.5657027181496,
+      "max_drawdown": -0.014761938777939188,
+      "day": "2026-11-10",
+      "day_start": 1985.4976992591708,
       "daily_halt": false,
       "halted": false,
-      "orders_today": 3,
-      "sessions": 10,
-      "fills": 7,
-      "round_trips": 2,
-      "modeled_cost": 2.7449867303088618,
+      "orders_today": 2,
+      "sessions": 11,
+      "fills": 9,
+      "round_trips": 4,
+      "modeled_cost": 3.5206721846965046,
       "spy_start": 765.225
     },
     "reversion_20": {
@@ -83,12 +73,12 @@
       "pending": null,
       "peak": 2039.1343421510699,
       "max_drawdown": -0.00645636411794992,
-      "day": "2026-11-09",
-      "day_start": 2006.6981192605874,
+      "day": "2026-11-10",
+      "day_start": 2038.3393393133165,
       "daily_halt": false,
       "halted": false,
-      "orders_today": 3,
-      "sessions": 10,
+      "orders_today": 0,
+      "sessions": 11,
       "fills": 12,
       "round_trips": 6,
       "modeled_cost": 4.786097090412426,
@@ -102,12 +92,12 @@
       "pending": null,
       "peak": 2000.8412728016963,
       "max_drawdown": -0.006672735903492044,
-      "day": "2026-11-09",
+      "day": "2026-11-10",
       "day_start": 1998.0784509138443,
       "daily_halt": false,
       "halted": false,
       "orders_today": 0,
-      "sessions": 10,
+      "sessions": 11,
       "fills": 8,
       "round_trips": 4,
       "modeled_cost": 3.162994105866319,
@@ -115,26 +105,27 @@
     },
     "trend_24_72": {
       "started_at": "2026-10-26 19:00:00+00:00",
-      "cash": 1992.0720318194574,
-      "equity": 1992.0720318194574,
-      "positions": {},
-      "pending": {
-        "symbol": "IWM",
-        "side": "buy",
-        "reason": "signal_entry",
-        "signal_bar": "2026-11-09 20:00:00+00:00"
+      "cash": 1597.641769519205,
+      "equity": 1991.4814473887996,
+      "positions": {
+        "IWM": {
+          "qty": 1.403662691102697,
+          "entry": 280.972648,
+          "bars_held": 5
+        }
       },
+      "pending": null,
       "peak": 2005.7272619383373,
-      "max_drawdown": -0.007265541804539866,
-      "day": "2026-11-09",
+      "max_drawdown": -0.008593200286329039,
+      "day": "2026-11-10",
       "day_start": 1992.0720318194574,
       "daily_halt": false,
       "halted": false,
-      "orders_today": 0,
-      "sessions": 10,
-      "fills": 10,
+      "orders_today": 1,
+      "sessions": 11,
+      "fills": 11,
       "round_trips": 5,
-      "modeled_cost": 3.9486954215522503,
+      "modeled_cost": 4.342767075455709,
       "spy_start": 765.225
     },
     "rsi25_trend": {
@@ -145,12 +136,12 @@
       "pending": null,
       "peak": 2000.0,
       "max_drawdown": 0.0,
-      "day": "2026-11-09",
+      "day": "2026-11-10",
       "day_start": 2000.0,
       "daily_halt": false,
       "halted": false,
       "orders_today": 0,
-      "sessions": 10,
+      "sessions": 11,
       "fills": 0,
       "round_trips": 0,
       "modeled_cost": 0.0,
@@ -165,12 +156,12 @@
       "pending": null,
       "peak": 2006.0678314941638,
       "max_drawdown": -0.0033013979567666496,
-      "day": "2026-11-09",
+      "day": "2026-11-10",
       "day_start": 2000.3666378026837,
       "daily_halt": false,
       "halted": false,
       "orders_today": 0,
-      "sessions": 9,
+      "sessions": 10,
       "fills": 4,
       "round_trips": 2,
       "modeled_cost": 1.5843682706249664
