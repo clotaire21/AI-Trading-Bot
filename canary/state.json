@@ -1,23 +1,16 @@
 {
   "account_hash": "ccc88de6d470ba921ed8bfe4169eb64dd8325f541ee46755fd85ee0961d92b15",
-  "peak": 1979.72,
-  "day": "2026-11-06",
-  "day_start": 1979.72,
+  "peak": 1983.555004486164,
+  "day": "2026-11-10",
+  "day_start": 1978.795004486164,
   "daily_halt": false,
   "halted": false,
-  "orders_today": 1,
+  "orders_today": 0,
   "entries": {
     "IWM": "2026-11-05 15:00:00+00:00"
   },
   "last_bar": "2026-11-06 19:00:00+00:00",
-  "pending": {
-    "symbol": "IWM",
-    "side": "sell",
-    "qty": "0.709911000",
-    "limit_price": "273.87",
-    "client_id": "lab-891a7f460cc5ecd8d21e0e71b31c7743",
-    "bar": "2026-11-06 19:00:00+00:00"
-  },
+  "pending": null,
   "benchmark_start": 741.91,
   "initial_equity": 1979.72,
   "modeled_cost": 0.194995513836,
@@ -25,7 +18,7 @@
     "IWM": "0.709911"
   },
   "tracked_cash": 1784.71,
-  "last_equity": 1978.795004486164,
+  "last_equity": 1983.555004486164,
   "max_drawdown": -0.0004672355251429394,
   "entries_enabled": true,
   "drain_complete": false,
