@@ -1,8 +1,8 @@
 {
   "account_hash": "ccc88de6d470ba921ed8bfe4169eb64dd8325f541ee46755fd85ee0961d92b15",
   "peak": 1983.555004486164,
-  "day": "2026-11-10",
-  "day_start": 1978.795004486164,
+  "day": "2026-11-13",
+  "day_start": 1983.555004486164,
   "daily_halt": false,
   "halted": false,
   "orders_today": 0,
@@ -18,8 +18,8 @@
     "IWM": "0.709911"
   },
   "tracked_cash": 1784.71,
-  "last_equity": 1983.555004486164,
-  "max_drawdown": -0.0004672355251429394,
+  "last_equity": 1981.675004486164,
+  "max_drawdown": -0.0009477932276887868,
   "entries_enabled": true,
   "drain_complete": false,
   "strategy": "trend_pullback_rsi_stoch"
