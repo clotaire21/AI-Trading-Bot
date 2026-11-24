@@ -90,3 +90,4 @@
 {"at": "2026-11-19T22:42:50.838180+00:00", "equity": 1972.4, "event": "market_closed", "hash": "3ac64821ccc2a6da7d523189fa994fb9a25fe54626d2d6c0c549b72558bd23c7", "previous": "2e88ae9fa25d44ef7dc21ba69115a7eb909c46ba04bc5a44f7fe5d2841c18067"}
 {"at": "2026-11-20T21:46:32.483399+00:00", "equity": 1967.91, "event": "market_closed", "hash": "4c55c23c588bc1e223818a6b3ad376fd3cce45827b0cd211313b80ac9601b5d9", "previous": "3ac64821ccc2a6da7d523189fa994fb9a25fe54626d2d6c0c549b72558bd23c7"}
 {"at": "2026-11-20T22:16:43.049050+00:00", "equity": 1967.8, "event": "market_closed", "hash": "9f1eb6f9183c6b43c9c2e81caff38d14b8581ec019269e6b256fc6f6a04d7e3a", "previous": "4c55c23c588bc1e223818a6b3ad376fd3cce45827b0cd211313b80ac9601b5d9"}
+{"at": "2026-11-24T01:37:57.652418+00:00", "equity": 1974.08, "event": "market_closed", "hash": "82e6b55be96b86d945831edf89acb956f51c8aad9d84097f51b890a6db1f4338", "previous": "9f1eb6f9183c6b43c9c2e81caff38d14b8581ec019269e6b256fc6f6a04d7e3a"}
